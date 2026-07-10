@@ -131,9 +131,6 @@ def reset_vectorstore() -> None:
 
 
 def create_vectorstore(documents: list[Document], ids: list[str]) -> Chroma:
-    """
-    성분 Document들을 embedding한 뒤 Chroma Vector DB에 저장합니다.
-    """
     embeddings = get_embeddings()
 
     vectorstore = Chroma.from_documents(

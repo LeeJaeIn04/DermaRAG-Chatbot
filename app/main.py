@@ -1,7 +1,6 @@
 from fastapi import FastAPI
-from app.config import settings
+from app.graph.workflow import derma_rag_graph
 from app.schemas import ChatRequest, ChatResponse
-from app.rag_chain import build_answer
 
 app = FastAPI(
     title="DermaRAG API",
@@ -17,5 +16,14 @@ def health_check():
     }
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest):
-    return build_answer(request)
+def chat(request: ChatRequest) -> ChatResponse:
+    final_state = derma_rag_graph.invoke(
+        {
+            "request" : request,
+        }
+    )
+    
+    return ChatResponse (
+        answer = final_state.get("answer", ""),
+        sources = final_state.get("sources", []),
+    )

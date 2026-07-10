@@ -5,9 +5,6 @@ from typing import Any
 from xml.etree import ElementTree
 import requests
 from app.config import settings
-from dotenv import load_dotenv
-load_dotenv()
-
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -28,7 +25,8 @@ def validate_environment() -> str:
         raise RuntimeError(
             ".env 파일에 공공데이터포털 API 키를 추가해 주세요."
         )
-    return service_key
+
+    return service_key.strip()
 
 
 def clean_text(value: str | None) -> str:
