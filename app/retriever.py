@@ -5,13 +5,25 @@ from typing import Any
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from app.embeddings import get_embeddings
-
+import re
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 RAW_INPUT_PATH = DATA_DIR / "mfds_ingredients_raw.jsonl"
 PERSIST_DIR = BASE_DIR / "vectorstore" / "chroma"
 COLLECTION_NAME = "derma_rag"
+
+def with_retrieval_type(
+        doc: Document,
+        retrieval_type: str,
+) -> Document:
+    return Document (
+        page_content=doc.page_content,
+        metadata={
+            **(doc.metadata or {}),
+            "retrieval_type": retrieval_type,
+        },
+    )
 
 
 def clean_text(value: Any) -> str:
@@ -22,7 +34,9 @@ def clean_text(value: Any) -> str:
 
 
 def normalize_text(value: Any) -> str:
-    return clean_text(value).lower().replace(" ", "")
+    text = clean_text(value).lower()
+    text = re.sub(r"[\s\-/·,()]+", "", text)
+    return text
 
 
 def item_to_text(item: dict[str, Any]) -> str:
@@ -122,22 +136,6 @@ def exact_match_documents(query: str, limit: int = 8) -> list[Document]:
             score = 90
         elif cas_norm and cas_norm == query_norm:
             score = 90
-        elif kor_norm and kor_norm in query_norm:
-            score = 70
-        elif kor_norm and query_norm in kor_norm:
-            score = 65
-        elif eng_norm and eng_norm in query_norm:
-            score = 60
-        elif eng_norm and query_norm in eng_norm:
-            score = 55
-        elif synonym_norm and (
-            synonym_norm in query_norm or query_norm in synonym_norm
-        ):
-            score = 50
-        elif cas_norm and (
-            cas_norm in query_norm or query_norm in cas_norm
-        ):
-            score = 50
 
         if score is None:
             continue

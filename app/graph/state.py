@@ -15,6 +15,7 @@ class DermaRagState(TypedDict, total=False):
     context: str
     answer: str
     sources: list[Source]
+    metadata: dict[str, Any]
     
     route: DermaRoute
     warnings: list[str]

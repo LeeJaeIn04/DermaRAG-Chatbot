@@ -7,15 +7,25 @@ from app.rag_chain import (
     generate_agent_answer,
     build_sources,
 )
+from app.trace_metadata import (
+    count_retrieval_types,
+    merge_metadata,
+)
 
-def classify_intent_node(state: DermaRagState) -> DermaRagState:
+from typing import Any
+
+def classify_intent_node(
+    state: DermaRagState,
+) -> dict[str, Any]:
     request = state["request"]
 
     question = request.question or ""
     ingredient_list = request.ingredient_list or ""
     current_routine = request.current_routine or ""
-    
-    text = f"{question} {ingredient_list} {current_routine}".lower()
+
+    text = (
+        f"{question} {ingredient_list} {current_routine}"
+    ).lower()
 
     danger_keywords = [
         "호흡곤란",
@@ -53,27 +63,40 @@ def classify_intent_node(state: DermaRagState) -> DermaRagState:
         "병행",
     ]
 
-    if any(keyword in text for keyword in danger_keywords):
-        return {
-            "route": "safety_warning",
-            "warnings": ["위험 증상 가능성이 있으므로 안전 안내를 우선합니다."],
-        }
-    
-    if ingredient_list.strip():
-        return {
-            "route": "ingredient_rag",
-            "warnings": [],
-        }
+    if any(
+        keyword in text
+        for keyword in danger_keywords
+    ):
+        route = "safety_warning"
+        warnings = [
+            "위험 증상 가능성이 있으므로 안전 안내를 우선합니다."
+        ]
 
-    if any(keyword in text for keyword in routine_keywords):
-        return {
-            "route": "routine_check",
-            "warnings": [],
-        }
-    
+    elif ingredient_list.strip():
+        route = "ingredient_rag"
+        warnings = []
+
+    elif any(
+        keyword in text
+        for keyword in routine_keywords
+    ):
+        route = "routine_check"
+        warnings = []
+
+    else:
+        route = "general_answer"
+        warnings = []
+
+    metadata = merge_metadata(
+        state.get("metadata"),
+        route=route,
+        warnings=warnings,
+    )
+
     return {
-        "route": "general_answer",
-        "warnings": [],
+        "route": route,
+        "warnings": warnings,
+        "metadata": metadata,
     }
     
 
@@ -81,46 +104,77 @@ def route_after_classification(state: DermaRagState) -> str:
     return state.get("route", "general_answer")
 
 
-def parse_ingredient_node(state: DermaRagState) -> DermaRagState:
+def parse_ingredient_node(state: DermaRagState) -> dict[str, Any]:
     request = state["request"]
 
     ingredient_names = split_ingredients(request.ingredient_list)
+    metadata = merge_metadata(
+        state.get("metadata"),
+        ingredient_count = len(ingredient_names),
+    )
+
     return {
         "ingredient_names": ingredient_names,
+        "metadata": metadata,
     }
 
-def retrieve_documents_node(state: DermaRagState) -> DermaRagState:
+def retrieve_documents_node(state: DermaRagState) -> dict[str, Any]:
     request = state["request"]
     docs = retrieve_documents(request)
+    retrieval_counts = count_retrieval_types(docs)
+    metadata = merge_metadata(
+        state.get("metadata"),
+        retrieved_doc_count = len(docs),
+
+        exact_match_count = (
+            retrieval_counts["exact_match_count"]
+        ),
+        vector_fallback_count=(
+            retrieval_counts["vector_fallback_count"]
+        ),
+    )
     return {
         "docs" : docs,
+        "metadata": metadata,
     }
 
-def build_context_node(state: DermaRagState) -> DermaRagState:
+def build_context_node(state: DermaRagState) -> dict[str, Any]:
     docs = state.get("docs", [])
-    context = build_context(docs)
+    context = build_context(docs).strip()
+
+    metadata = merge_metadata(
+        state.get("metadata"),
+        context_char_count = len(context),
+        context_empty = not bool(docs),
+    )
     return {
         "context": context,
+        "metadata": metadata,
     }
 
 
-def generate_answer_node(state: DermaRagState) -> str:
+def generate_answer_node(state: DermaRagState) -> dict[str, Any]:
     request = state["request"]
     context = state.get("context", "")
-    answer = generate_answer(request, context)
-    return {
-        "answer": answer,
-    }
+    context_empty = state.get("metadata", {}).get("context_empty", True)
+    
+    answer = generate_answer(request=request, context=context)
+    
+    metadata = merge_metadata(
+        state.get("metadata"),
+        used_rag_context=not context_empty,
+    )
+    return {"answer": answer, "metadata": metadata}
 
 
-def build_sources_node(state: DermaRagState) -> DermaRagState:
+def build_sources_node(state: DermaRagState) -> dict[str, Any]:
     docs = state.get("docs", [])
     sources = build_sources(docs)
     return {
         "sources": sources,
     }
 
-def safety_warning_node(state: DermaRagState) -> DermaRagState:
+def safety_warning_node(state: DermaRagState) -> dict[str, Any]:
     request = state["request"]
     warnings = state.get("warnings", [])
 
@@ -130,12 +184,18 @@ def safety_warning_node(state: DermaRagState) -> DermaRagState:
         warnings = warnings,
     )
 
+    metadata = merge_metadata(
+        state.get("metadata"),
+        used_rag_context=False,
+    )
+
     return {
         "answer" : answer,
         "sources" : [],
+        "metadata": metadata,
     }
 
-def routine_check_node(state: DermaRagState) -> DermaRagState:
+def routine_check_node(state: DermaRagState) -> dict[str, Any]:
     request = state["request"]
     warnings = state.get("warnings", [])
 
@@ -145,12 +205,18 @@ def routine_check_node(state: DermaRagState) -> DermaRagState:
         warnings = warnings,
     )
 
+    metadata = merge_metadata(
+        state.get("metadata"),
+        used_rag_context=False,
+    )
+
     return {
         "answer" : answer,
         "sources" : [],
+        "metadata": metadata,
     }
 
-def generate_answer_node(state: DermaRagState) -> DermaRagState:
+def generate_agent_answer_node(state: DermaRagState) -> dict[str, Any]:
     request = state["request"]
     warnings = state.get("warnings", [])
 
@@ -160,7 +226,13 @@ def generate_answer_node(state: DermaRagState) -> DermaRagState:
         warnings = warnings,
     )
 
+    metadata = merge_metadata(
+        state.get("metadata"),
+        used_rag_context=False,
+    )
+
     return {
         "answer" : answer,
         "sources" : [],
+        "metadata": metadata,
     }

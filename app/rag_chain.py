@@ -67,7 +67,7 @@ def retrieve_documents(
         docs = []
 
         for ingredient_name in ingredient_names:
-            docs.extend(search_documents(ingredient_name, search_k=2))
+            docs.extend(search_documents(ingredient_name, search_k=1))
     
     else:
         search_query = build_search_query(request)
@@ -258,7 +258,12 @@ def build_sources(docs: list[Any]) -> list[Source]:
     return [
         Source(
             source = doc.metadata.get("source", "unknown"),
-            content = doc.page_content[:500]
+            content = doc.page_content[:500],
+            ingredient_kor_name=doc.metadata.get("ingredient_kor_name"),
+            ingredient_eng_name=doc.metadata.get("ingredient_eng_name"),
+            cas_no=doc.metadata.get("cas_no"),
+            retrieval_type=doc.metadata.get("retrieval_type"),
+            match_score=doc.metadata.get("match_score"),
         )
         for doc in docs
     ]
@@ -266,6 +271,7 @@ def build_sources(docs: list[Any]) -> list[Source]:
 
 # 기존 방식
 def build_answer(request: ChatRequest) -> ChatResponse:
+    """
     ingredient_names = split_ingredients(request.ingredient_list)
 
     if ingredient_names:
@@ -299,4 +305,4 @@ def build_answer(request: ChatRequest) -> ChatResponse:
     return ChatResponse(
         answer=response.content,
         sources=sources,
-    )
+    )"""

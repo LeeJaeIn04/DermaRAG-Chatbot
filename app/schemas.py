@@ -18,7 +18,7 @@ class ChatRequest(BaseModel):
     )
     current_routine: str | None = Field(
         default=None,
-        description="현재 스킴케어 루틴",
+        description="현재 스킨케어 루틴",
         examples=["BHA 토너를 주 3회 사용 중"],
     )
 

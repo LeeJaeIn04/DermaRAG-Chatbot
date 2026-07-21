@@ -10,7 +10,7 @@ from app.graph.nodes import (
     build_sources_node,
     safety_warning_node,
     routine_check_node,
-    generate_answer_node,
+    generate_agent_answer_node,
 )
 
 
@@ -27,7 +27,7 @@ def create_derma_rag_graph():
 
     builder.add_node("safety_warning", safety_warning_node)
     builder.add_node("routine_check", routine_check_node)
-    builder.add_node("general_answer", generate_answer_node)
+    builder.add_node("generate_agent_answer", generate_agent_answer_node)
 
     builder.add_edge(START, "classify_intent")
 
@@ -39,7 +39,7 @@ def create_derma_rag_graph():
             "ingredient_rag" : "parse_ingredients",
             "safety_warning" : "safety_warning",
             "routine_check": "routine_check",
-            "general_answer": "general_answer",
+            "general_answer": "generate_agent_answer",
         },
     )
 
@@ -51,7 +51,7 @@ def create_derma_rag_graph():
 
     builder.add_edge("safety_warning", END)
     builder.add_edge("routine_check", END)
-    builder.add_edge("general_answer", END)
+    builder.add_edge("generate_agent_answer", END)
 
     return builder.compile()
 
