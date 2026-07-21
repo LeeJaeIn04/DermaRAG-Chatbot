@@ -1,9 +1,13 @@
 # Environment variables
 .env
+.env.*
+!.env.example
 
 # Virtual environment
 .venv/
 venv/
+*.py[cod]
+.pytest_cache/
 
 # Python cache
 __pycache__/
@@ -16,3 +20,15 @@ vectorstore/
 data/*.jsonl
 data/*.txt
 evals/
+node_modules/
+.vscode/
+
+*.db
+*.sqlite
+*.sqlite3
+
+playwright-report/
+test-results/
+
+check_oliveyoung_search.py
+check_oliveyoung_ingredients.py
