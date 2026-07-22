@@ -26,6 +26,7 @@ node_modules/
 *.db
 *.sqlite
 *.sqlite3
+data/derma_rag.db
 
 playwright-report/
 test-results/

@@ -555,6 +555,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "requests" },
     { name = "sentence-transformers" },
+    { name = "sqlalchemy" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -581,6 +582,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "sentence-transformers", specifier = ">=5.6.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.51" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.50.2" },
 ]
 
