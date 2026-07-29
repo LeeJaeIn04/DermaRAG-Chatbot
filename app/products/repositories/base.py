@@ -83,7 +83,6 @@ class ProductIngredientRepository(Protocol):
 
         데이터가 없으면 None을 반환한다.
         """
-
         ...
 
     def save_ingredients(

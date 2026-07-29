@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph, END, START
 from app.graph.nodes import (
     classify_intent_node,
     route_after_classification,
+    evaluate_skin_compatibility_node,
     parse_ingredient_node,
     retrieve_documents_node,
     build_context_node,
@@ -18,6 +19,10 @@ def create_derma_rag_graph():
     builder = StateGraph(DermaRagState)
 
     builder.add_node("classify_intent", classify_intent_node)
+    builder.add_node(
+        "evaluate_skin_compatibility",
+        evaluate_skin_compatibility_node,
+    )
 
     builder.add_node("parse_ingredients", parse_ingredient_node)
     builder.add_node("retrieve_documents", retrieve_documents_node)
@@ -30,9 +35,13 @@ def create_derma_rag_graph():
     builder.add_node("generate_agent_answer", generate_agent_answer_node)
 
     builder.add_edge(START, "classify_intent")
+    builder.add_edge(
+        "classify_intent",
+        "evaluate_skin_compatibility",
+    )
 
     builder.add_conditional_edges(
-        "classify_intent",
+        "evaluate_skin_compatibility",
         route_after_classification,
         
         {

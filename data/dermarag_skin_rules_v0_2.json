@@ -1,0 +1,1479 @@
+{
+  "dataset_name": "DermaRAG Skin Compatibility Rules",
+  "version": "0.2.0",
+  "created_at": "2026-07-29",
+  "scope": "피부 프로필과 실제 화장품 전성분 표기를 연결하는 규칙 기반 참고·주의·긍정 요인 탐지 데이터셋",
+  "important_limitations": [
+    "성분표만으로 농도·pH·제형·입자 크기·불순물·사용량·워시오프 여부를 확정할 수 없어 실제 반응을 단정하지 않음",
+    "caution은 금지·유해 판정이 아니라 특정 피부 상태 또는 개인 반응 이력에서 확인할 참고 신호임",
+    "beneficial은 완제품 효능을 보장하지 않으며 배합량과 제형에 따라 체감이 달라질 수 있음",
+    "개인의 과거 동일 성분 반응과 의료진의 패치 테스트 결과를 일반 규칙보다 우선함",
+    "일반 탤크와 석면 기준에 부적합한 탤크를 동일하게 취급하지 않음",
+    "이 데이터셋은 의료 진단이나 치료 지침이 아님"
+  ],
+  "sources": {
+    "AAD_DRY": {
+      "title": "Dermatologists' top tips for relieving dry skin",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/dermatologists-tips-relieve-dry-skin",
+      "type": "dermatology_guideline"
+    },
+    "AAD_OILY": {
+      "title": "How to control oily skin",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/oily-skin",
+      "type": "dermatology_guideline"
+    },
+    "AAD_ACNE": {
+      "title": "10 skin care habits that can worsen acne",
+      "url": "https://www.aad.org/public/diseases/acne/skin-care/habits-stop",
+      "type": "dermatology_guideline"
+    },
+    "AAD_MOIST_ACNE": {
+      "title": "Moisturizer: Why you may need it if you have acne",
+      "url": "https://www.aad.org/public/diseases/acne/skin-care/moisturizer",
+      "type": "dermatology_guideline"
+    },
+    "AAD_ROSACEA": {
+      "title": "7 rosacea skin care tips dermatologists recommend",
+      "url": "https://www.aad.org/public/diseases/rosacea/triggers/tips",
+      "type": "dermatology_guideline"
+    },
+    "SURFACTANT_BARRIER": {
+      "title": "The impact of cleansers on the skin barrier and the technology of mild cleansing",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/14728695/",
+      "type": "peer_reviewed_review"
+    },
+    "MOIST_TECH": {
+      "title": "Moisturizer technology versus clinical performance",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/14728699/",
+      "type": "peer_reviewed_review"
+    },
+    "FRAG_PRES": {
+      "title": "Allergic contact dermatitis to preservatives and fragrances in cosmetics",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/21611680/",
+      "type": "peer_reviewed_review"
+    },
+    "COSMETIC_ACD": {
+      "title": "Allergic contact dermatitis caused by cosmetic products",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/24656778/",
+      "type": "peer_reviewed_review"
+    },
+    "RETINOID_AE": {
+      "title": "Topical retinoids in acne vulgaris: update on efficacy and safety",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/18973403/",
+      "type": "peer_reviewed_review"
+    },
+    "AHA_REVIEW": {
+      "title": "Evaluating the Efficacy and Safety of Alpha-Hydroxy Acids in Dermatological Practice",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/39050562/",
+      "type": "peer_reviewed_review"
+    },
+    "PHA_TOL": {
+      "title": "A polyhydroxy acid skin care regimen provides antiaging effects comparable to an alpha-hydroxyacid regimen",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/15002657/",
+      "type": "clinical_study"
+    },
+    "COMEDO_LIMIT": {
+      "title": "Comedogenicity in cosmeceuticals: testing limitations review",
+      "url": "https://www.sciencedirect.com/science/article/pii/S2950198925000881",
+      "type": "peer_reviewed_review"
+    },
+    "LABEL_LIMIT": {
+      "title": "Clinical utility of marketing terms used for over-the-counter dermatologic products",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/29671667/",
+      "type": "peer_reviewed_study"
+    },
+    "CERAMIDE_ACNE": {
+      "title": "Moisturizers and ceramide-containing moisturizers may offer concomitant therapy with acne treatments",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/24688622/",
+      "type": "expert_consensus_review"
+    },
+    "FDA_ALLERGENS": {
+      "title": "Allergens in Cosmetics",
+      "url": "https://www.fda.gov/cosmetics/cosmetic-ingredients/allergens-cosmetics",
+      "type": "regulatory_consumer_guidance"
+    },
+    "FDA_INGREDIENTS": {
+      "title": "Cosmetic Ingredients",
+      "url": "https://www.fda.gov/cosmetics/cosmetic-products-ingredients/cosmetic-ingredients",
+      "type": "regulatory_reference"
+    },
+    "FDA_PARABENS": {
+      "title": "Parabens in Cosmetics",
+      "url": "https://www.fda.gov/cosmetics/cosmetic-ingredients/parabens-cosmetics",
+      "type": "regulatory_consumer_guidance"
+    },
+    "EU_COSING": {
+      "title": "CosIng cosmetic ingredient database",
+      "url": "https://single-market-economy.ec.europa.eu/sectors/cosmetics/cosmetic-ingredient-database_en",
+      "type": "official_ingredient_function_reference"
+    },
+    "AAD_ROSACEA_ING": {
+      "title": "7 rosacea skin care tips dermatologists recommend",
+      "url": "https://www.aad.org/public/diseases/rosacea/triggers/tips",
+      "type": "dermatology_guideline"
+    },
+    "AAD_DRY_TIPS": {
+      "title": "Dermatologists' top tips for relieving dry skin",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/dermatologists-tips-relieve-dry-skin",
+      "type": "dermatology_guideline"
+    },
+    "CONTACT_ALLERGY_2025": {
+      "title": "What is New in Contact Allergy To Cosmetics?",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41134517/",
+      "type": "peer_reviewed_review"
+    },
+    "BOTANICAL_ACD": {
+      "title": "Contact dermatitis to cosmetics, fragrances, and botanicals",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/15186372/",
+      "type": "peer_reviewed_review"
+    }
+  },
+  "skin_profiles": [
+    {
+      "profile_id": "dry",
+      "display_name_ko": "건성",
+      "core_features": [
+        "당김",
+        "거칠음",
+        "각질",
+        "수분·지질 유지 부족 가능성"
+      ],
+      "priority_concerns": [
+        "dryness",
+        "barrier_disruption",
+        "stinging"
+      ],
+      "helpful_function_groups": [
+        "humectant",
+        "emollient",
+        "light_emollient",
+        "occlusive",
+        "barrier_support",
+        "bland_moisturizer"
+      ],
+      "caution_function_groups": [
+        "harsh_surfactant",
+        "high_volatility_solvent",
+        "fragrance",
+        "fragrance_allergen",
+        "strong_exfoliant",
+        "powder_absorbent"
+      ],
+      "notes": "성분표만으로 함량과 제형을 알 수 없으므로 조건부 주의로 표시",
+      "source_ids": [
+        "AAD_DRY",
+        "SURFACTANT_BARRIER",
+        "MOIST_TECH"
+      ]
+    },
+    {
+      "profile_id": "oily",
+      "display_name_ko": "지성",
+      "core_features": [
+        "피지·번들거림",
+        "모공 막힘 또는 여드름 동반 가능"
+      ],
+      "priority_concerns": [
+        "excess_sebum",
+        "clogging_concern",
+        "irritation_from_overcleansing"
+      ],
+      "helpful_function_groups": [
+        "light_humectant",
+        "keratolytic_acne_support",
+        "barrier_support",
+        "powder_absorbent"
+      ],
+      "caution_function_groups": [
+        "harsh_surfactant",
+        "occlusive",
+        "astringent_pattern",
+        "multiple_exfoliants"
+      ],
+      "notes": "개별 성분의 코메도제닉 점수보다 완제품 표시와 사용자 이력을 우선",
+      "source_ids": [
+        "AAD_OILY",
+        "AAD_ACNE",
+        "COMEDO_LIMIT"
+      ]
+    },
+    {
+      "profile_id": "combination",
+      "display_name_ko": "복합성",
+      "core_features": [
+        "T존 유분",
+        "볼·입가 건조 가능",
+        "부위별 반응 차이"
+      ],
+      "priority_concerns": [
+        "regional_oiliness",
+        "regional_dryness"
+      ],
+      "helpful_function_groups": [
+        "humectant",
+        "light_humectant",
+        "light_emollient",
+        "barrier_support"
+      ],
+      "caution_function_groups": [
+        "occlusive",
+        "harsh_surfactant",
+        "multiple_exfoliants"
+      ],
+      "notes": "부위별 사용 안내가 필요하며 단일 적합도 판정은 피함",
+      "source_ids": [
+        "AAD_OILY",
+        "AAD_DRY"
+      ]
+    },
+    {
+      "profile_id": "dehydrated_oily",
+      "display_name_ko": "수부지",
+      "core_features": [
+        "표면 유분",
+        "세안 후 당김",
+        "속건조",
+        "과세정 가능성"
+      ],
+      "priority_concerns": [
+        "dehydration",
+        "barrier_disruption",
+        "excess_sebum"
+      ],
+      "helpful_function_groups": [
+        "humectant",
+        "light_humectant",
+        "barrier_support",
+        "light_emollient"
+      ],
+      "caution_function_groups": [
+        "harsh_surfactant",
+        "high_volatility_solvent",
+        "multiple_exfoliants",
+        "powder_absorbent"
+      ],
+      "notes": "의학적 진단명이 아니므로 oily + dehydration 조합으로 내부 표현",
+      "source_ids": [
+        "AAD_OILY",
+        "AAD_DRY",
+        "SURFACTANT_BARRIER"
+      ]
+    },
+    {
+      "profile_id": "sensitive",
+      "display_name_ko": "민감성",
+      "core_features": [
+        "따가움",
+        "홍조",
+        "가려움",
+        "제품 반응 이력"
+      ],
+      "priority_concerns": [
+        "irritation",
+        "sensitisation",
+        "stinging",
+        "redness"
+      ],
+      "helpful_function_groups": [
+        "barrier_support",
+        "bland_moisturizer",
+        "humectant"
+      ],
+      "caution_function_groups": [
+        "fragrance",
+        "fragrance_allergen",
+        "preservative_allergen",
+        "botanical_allergen",
+        "strong_exfoliant",
+        "retinoid",
+        "personal_allergen",
+        "surfactant_personal_allergen",
+        "powder_texture_agent"
+      ],
+      "notes": "피부 타입과 별도 축으로 관리하고 과거 반응 이력을 최우선",
+      "source_ids": [
+        "AAD_ROSACEA",
+        "FRAG_PRES",
+        "COSMETIC_ACD"
+      ]
+    },
+    {
+      "profile_id": "acne_prone",
+      "display_name_ko": "여드름·트러블성",
+      "core_features": [
+        "면포",
+        "염증성 트러블",
+        "제품 사용 후 악화 가능"
+      ],
+      "priority_concerns": [
+        "clogging_concern",
+        "irritation",
+        "treatment_dryness"
+      ],
+      "helpful_function_groups": [
+        "keratolytic_acne_support",
+        "barrier_support",
+        "light_humectant"
+      ],
+      "caution_function_groups": [
+        "occlusive",
+        "harsh_surfactant",
+        "multiple_exfoliants"
+      ],
+      "notes": "성분 단독으로 여드름 발생을 확정하지 않고 제품 표시·제형·사용자 이력을 함께 봄",
+      "source_ids": [
+        "AAD_ACNE",
+        "AAD_MOIST_ACNE",
+        "COMEDO_LIMIT",
+        "CERAMIDE_ACNE"
+      ]
+    },
+    {
+      "profile_id": "normal",
+      "display_name_ko": "중성",
+      "core_features": [
+        "과도한 건조·유분이 두드러지지 않음"
+      ],
+      "priority_concerns": [
+        "individual_reaction"
+      ],
+      "helpful_function_groups": [
+        "humectant",
+        "light_emollient",
+        "barrier_support"
+      ],
+      "caution_function_groups": [
+        "known_personal_allergen",
+        "multiple_exfoliants"
+      ],
+      "notes": "중성이라도 개인 알레르기·자극 이력은 별도 적용",
+      "source_ids": [
+        "AAD_DRY",
+        "COSMETIC_ACD"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "fragrance_general",
+      "canonical_group": "fragrance",
+      "display_name_ko": "향료 표시",
+      "aliases": [
+        "향료",
+        "fragrance",
+        "parfum",
+        "perfume",
+        "aroma"
+      ],
+      "functions": [
+        "fragrance"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily"
+      ],
+      "possible_concerns": [
+        "irritation",
+        "sensitisation",
+        "stinging",
+        "redness"
+      ],
+      "condition": "향료 반응 이력, 홍조·따가움이 있으면 우선순위를 높임",
+      "evidence_level": "dermatology_guideline_and_review",
+      "severity_default": "moderate",
+      "user_message_ko": "향료는 일부 사용자에게 자극이나 접촉 알레르기 반응을 일으킬 수 있어 민감·건조 피부 또는 반응 이력이 있다면 확인이 필요합니다.",
+      "source_ids": [
+        "AAD_DRY_TIPS",
+        "AAD_ROSACEA_ING",
+        "FRAG_PRES",
+        "FDA_ALLERGENS"
+      ]
+    },
+    {
+      "rule_id": "fragrance_declared_allergens",
+      "canonical_group": "fragrance_allergen",
+      "display_name_ko": "표시 가능한 개별 향 알레르겐",
+      "aliases": [
+        "limonene",
+        "리모넨",
+        "linalool",
+        "리날룰",
+        "citral",
+        "시트랄",
+        "geraniol",
+        "제라니올",
+        "citronellol",
+        "시트로넬올",
+        "eugenol",
+        "유제놀",
+        "isoeugenol",
+        "아이소유제놀",
+        "coumarin",
+        "쿠마린",
+        "cinnamal",
+        "신나말",
+        "cinnamyl alcohol",
+        "신나밀알코올",
+        "hydroxycitronellal",
+        "하이드록시시트로넬알",
+        "farnesol",
+        "파네솔",
+        "benzyl cinnamate",
+        "벤질신나메이트",
+        "benzyl salicylate",
+        "벤질살리실레이트",
+        "alpha-isomethyl ionone",
+        "알파-아이소메틸아이오논"
+      ],
+      "functions": [
+        "fragrance"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "sensitive"
+      ],
+      "possible_concerns": [
+        "sensitisation",
+        "contact_dermatitis"
+      ],
+      "condition": "개별 성분에 대한 반응 이력 또는 패치 테스트 결과가 있을 때 높은 우선순위",
+      "evidence_level": "regulatory_and_peer_reviewed_review",
+      "severity_default": "high_if_history",
+      "user_message_ko": "일부 향 성분은 접촉 알레르겐으로 알려져 있으므로 향료 반응 이력이 있는 민감 피부에서는 개별 성분명을 확인하세요.",
+      "source_ids": [
+        "FDA_ALLERGENS",
+        "FRAG_PRES",
+        "CONTACT_ALLERGY_2025"
+      ]
+    },
+    {
+      "rule_id": "preservative_isothiazolinones",
+      "canonical_group": "preservative_allergen",
+      "display_name_ko": "아이소티아졸리논계 보존제",
+      "aliases": [
+        "methylisothiazolinone",
+        "메틸아이소티아졸리논",
+        "methylchloroisothiazolinone",
+        "메틸클로로아이소티아졸리논",
+        "methylchloroisothiazolinone/methylisothiazolinone",
+        "메틸클로로아이소티아졸리논/메틸아이소티아졸리논"
+      ],
+      "functions": [
+        "preservative"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "sensitive"
+      ],
+      "possible_concerns": [
+        "sensitisation",
+        "contact_dermatitis"
+      ],
+      "condition": "리브온·워시오프와 규제 농도 차이를 성분표만으로 확정할 수 없음; 반응 이력 우선",
+      "evidence_level": "peer_reviewed_review",
+      "severity_default": "high_if_history",
+      "user_message_ko": "아이소티아졸리논계 보존제는 접촉 알레르기 보고가 있어 민감 피부나 과거 반응 이력이 있다면 주의 깊게 확인하세요.",
+      "source_ids": [
+        "FRAG_PRES",
+        "COSMETIC_ACD",
+        "CONTACT_ALLERGY_2025"
+      ]
+    },
+    {
+      "rule_id": "preservative_formaldehyde_releasers",
+      "canonical_group": "preservative_allergen",
+      "display_name_ko": "포름알데히드 방출 보존제",
+      "aliases": [
+        "dmdm hydantoin",
+        "디엠디엠하이단토인",
+        "imidazolidinyl urea",
+        "이미다졸리디닐우레아",
+        "diazolidinyl urea",
+        "다이아졸리디닐우레아",
+        "quaternium-15",
+        "쿼터늄-15",
+        "2-bromo-2-nitropropane-1,3-diol",
+        "브로노폴",
+        "bronopol",
+        "sodium hydroxymethylglycinate",
+        "소듐하이드록시메틸글리시네이트"
+      ],
+      "functions": [
+        "preservative"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "sensitive"
+      ],
+      "possible_concerns": [
+        "sensitisation",
+        "contact_dermatitis"
+      ],
+      "condition": "포름알데히드 또는 해당 보존제 반응 이력에서 우선순위 상승",
+      "evidence_level": "peer_reviewed_review",
+      "severity_default": "high_if_history",
+      "user_message_ko": "일부 포름알데히드 방출 보존제는 접촉 알레르기를 유발할 수 있어 관련 반응 이력이 있다면 확인이 필요합니다.",
+      "source_ids": [
+        "FRAG_PRES",
+        "COSMETIC_ACD",
+        "CONTACT_ALLERGY_2025"
+      ]
+    },
+    {
+      "rule_id": "paraben_preservatives",
+      "canonical_group": "preservative_standard",
+      "display_name_ko": "파라벤계 보존제",
+      "aliases": [
+        "methylparaben",
+        "메틸파라벤",
+        "ethylparaben",
+        "에틸파라벤",
+        "propylparaben",
+        "프로필파라벤",
+        "butylparaben",
+        "부틸파라벤"
+      ],
+      "functions": [
+        "preservative"
+      ],
+      "beneficial_for": [],
+      "caution_for": [],
+      "possible_concerns": [
+        "individual_allergy_possible"
+      ],
+      "condition": "일반 사용자에게 일괄 주의 판정하지 않고 개인 알레르기 이력에만 높은 우선순위를 부여",
+      "evidence_level": "regulatory_reference",
+      "severity_default": "reference",
+      "user_message_ko": "파라벤은 보존제로 사용됩니다. 성분명만으로 유해하다고 판단하지 않으며, 과거 동일 성분 반응이 있을 때만 우선 확인합니다.",
+      "source_ids": [
+        "FDA_PARABENS",
+        "FDA_INGREDIENTS"
+      ]
+    },
+    {
+      "rule_id": "harsh_anionic_surfactant",
+      "canonical_group": "harsh_surfactant",
+      "display_name_ko": "세정력이 강할 수 있는 음이온 계면활성제",
+      "aliases": [
+        "sodium lauryl sulfate",
+        "소듐라우릴설페이트",
+        "sls",
+        "ammonium lauryl sulfate",
+        "암모늄라우릴설페이트",
+        "sodium c14-16 olefin sulfonate",
+        "소듐C14-16올레핀설포네이트"
+      ],
+      "functions": [
+        "surfactant",
+        "cleanser"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily",
+        "combination",
+        "acne_prone"
+      ],
+      "possible_concerns": [
+        "dryness",
+        "tightness",
+        "barrier_disruption",
+        "irritation"
+      ],
+      "condition": "워시오프 여부·농도·다른 계면활성제 조합에 따라 영향이 크게 달라짐",
+      "evidence_level": "peer_reviewed_review",
+      "severity_default": "moderate",
+      "user_message_ko": "일부 음이온 계면활성제는 세정 후 당김이나 자극을 높일 수 있어 건성·민감·수부지 피부에서는 사용감을 확인하세요.",
+      "source_ids": [
+        "SURFACTANT_BARRIER"
+      ]
+    },
+    {
+      "rule_id": "amphoteric_surfactant_history",
+      "canonical_group": "surfactant_personal_allergen",
+      "display_name_ko": "코카미도프로필베타인 계열",
+      "aliases": [
+        "cocamidopropyl betaine",
+        "코카미도프로필베타인",
+        "coco-betaine",
+        "코코-베타인"
+      ],
+      "functions": [
+        "surfactant"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "sensitive"
+      ],
+      "possible_concerns": [
+        "contact_dermatitis",
+        "individual_allergy_possible"
+      ],
+      "condition": "대부분의 사용자를 일괄 주의 처리하지 않고 해당 성분·불순물 반응 이력에서 우선 적용",
+      "evidence_level": "contact_allergy_review",
+      "severity_default": "high_if_history",
+      "user_message_ko": "코카미도프로필베타인 계열은 세정 성분으로 널리 쓰이지만 일부 사람에게 접촉 반응이 보고되므로 과거 반응 이력이 있다면 확인하세요.",
+      "source_ids": [
+        "COSMETIC_ACD"
+      ]
+    },
+    {
+      "rule_id": "volatile_alcohol",
+      "canonical_group": "high_volatility_solvent",
+      "display_name_ko": "휘발성 알코올",
+      "aliases": [
+        "alcohol denat.",
+        "alcohol denat",
+        "변성알코올",
+        "ethanol",
+        "에탄올",
+        "ethyl alcohol",
+        "에틸알코올",
+        "sd alcohol 40-b",
+        "sd alcohol 40"
+      ],
+      "functions": [
+        "solvent",
+        "sensory_modifier"
+      ],
+      "beneficial_for": [
+        "oily"
+      ],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily"
+      ],
+      "possible_concerns": [
+        "dryness",
+        "stinging",
+        "irritation"
+      ],
+      "condition": "일반명 alcohol만 단독 alias로 사용하지 않아 지방알코올 오탐을 방지; 농도·제형에 따라 영향 차이",
+      "evidence_level": "dermatology_guideline",
+      "severity_default": "context_dependent",
+      "user_message_ko": "휘발성 알코올은 산뜻한 사용감을 줄 수 있지만 건조·민감·수부지 피부에서는 건조감이나 따가움을 확인할 필요가 있습니다.",
+      "source_ids": [
+        "AAD_DRY",
+        "AAD_ROSACEA_ING"
+      ]
+    },
+    {
+      "rule_id": "fatty_alcohol_emollient",
+      "canonical_group": "emollient",
+      "display_name_ko": "지방알코올 보습·유연 성분",
+      "aliases": [
+        "cetyl alcohol",
+        "세틸알코올",
+        "stearyl alcohol",
+        "스테아릴알코올",
+        "cetearyl alcohol",
+        "세테아릴알코올",
+        "behenyl alcohol",
+        "베헤닐알코올",
+        "myristyl alcohol",
+        "미리스틸알코올",
+        "lauryl alcohol",
+        "라우릴알코올"
+      ],
+      "functions": [
+        "emollient",
+        "emulsifier",
+        "thickener"
+      ],
+      "beneficial_for": [
+        "dry",
+        "dehydrated_oily",
+        "combination",
+        "normal"
+      ],
+      "caution_for": [],
+      "possible_concerns": [
+        "individual_allergy_possible"
+      ],
+      "condition": "에탄올·변성알코올과 다른 성분군이며 개인 반응 이력 외에는 휘발성 알코올 주의를 적용하지 않음",
+      "evidence_level": "functional_reference",
+      "severity_default": "beneficial",
+      "user_message_ko": "세틸알코올·세테아릴알코올 같은 지방알코올은 주로 유연제나 유화 안정화에 쓰이며 휘발성 알코올과 다르게 취급합니다.",
+      "source_ids": [
+        "EU_COSING",
+        "MOIST_TECH"
+      ]
+    },
+    {
+      "rule_id": "humectants",
+      "canonical_group": "humectant",
+      "display_name_ko": "습윤제",
+      "aliases": [
+        "glycerin",
+        "글리세린",
+        "glycerol",
+        "sodium hyaluronate",
+        "소듐하이알루로네이트",
+        "hyaluronic acid",
+        "하이알루로닉애씨드",
+        "hydrolyzed hyaluronic acid",
+        "하이드롤라이즈드하이알루로닉애씨드",
+        "panthenol",
+        "판테놀",
+        "butylene glycol",
+        "부틸렌글라이콜",
+        "propanediol",
+        "프로판다이올",
+        "sodium pca",
+        "소듐피씨에이",
+        "beta-glucan",
+        "베타-글루칸",
+        "urea",
+        "우레아"
+      ],
+      "functions": [
+        "humectant"
+      ],
+      "beneficial_for": [
+        "dry",
+        "dehydrated_oily",
+        "combination",
+        "normal",
+        "acne_prone"
+      ],
+      "caution_for": [],
+      "possible_concerns": [],
+      "condition": "완제품 제형과 배합량에 따라 체감 차이",
+      "evidence_level": "peer_reviewed_review",
+      "severity_default": "beneficial",
+      "user_message_ko": "습윤제는 각질층의 수분 유지를 돕는 기능이 있어 건성·수부지 피부에 긍정 요소가 될 수 있습니다.",
+      "source_ids": [
+        "MOIST_TECH",
+        "EU_COSING"
+      ]
+    },
+    {
+      "rule_id": "light_humectants",
+      "canonical_group": "light_humectant",
+      "display_name_ko": "가벼운 사용감의 습윤 성분",
+      "aliases": [
+        "betaine",
+        "베타인",
+        "trehalose",
+        "트레할로오스",
+        "xylitol",
+        "자일리톨",
+        "erythritol",
+        "에리스리톨",
+        "saccharide isomerate",
+        "사카라이드아이소머레이트"
+      ],
+      "functions": [
+        "humectant"
+      ],
+      "beneficial_for": [
+        "oily",
+        "acne_prone",
+        "dehydrated_oily",
+        "combination"
+      ],
+      "caution_for": [],
+      "possible_concerns": [],
+      "condition": "가벼운 사용감은 완제품 제형에 좌우되므로 성분 단독으로 보장하지 않음",
+      "evidence_level": "functional_inference",
+      "severity_default": "beneficial",
+      "user_message_ko": "일부 습윤 성분은 유분감 없이 수분 유지에 도움을 줄 수 있으나 실제 사용감은 제형에 따라 달라집니다.",
+      "source_ids": [
+        "EU_COSING",
+        "MOIST_TECH"
+      ]
+    },
+    {
+      "rule_id": "occlusives",
+      "canonical_group": "occlusive",
+      "display_name_ko": "밀폐·수분 손실 감소 성분",
+      "aliases": [
+        "petrolatum",
+        "페트롤라툼",
+        "바셀린",
+        "mineral oil",
+        "미네랄오일",
+        "paraffinum liquidum",
+        "파라피눔리퀴둠",
+        "dimethicone",
+        "다이메티콘",
+        "hydrogenated polyisobutene",
+        "하이드로제네이티드폴리아이소부텐"
+      ],
+      "functions": [
+        "occlusive",
+        "emollient"
+      ],
+      "beneficial_for": [
+        "dry",
+        "barrier_impaired"
+      ],
+      "caution_for": [
+        "oily",
+        "combination",
+        "acne_prone"
+      ],
+      "possible_concerns": [
+        "heavy_feel",
+        "clogging_concern"
+      ],
+      "condition": "모공 막힘을 성분 하나로 확정하지 않고 제형·사용 부위·개인 이력을 함께 평가",
+      "evidence_level": "functional_inference_with_limited_comedogenicity_evidence",
+      "severity_default": "low_contextual",
+      "user_message_ko": "밀폐 성분은 건조 피부의 수분 손실을 줄이는 데 도움을 줄 수 있지만 일부 지성·여드름성 사용자에게는 무겁게 느껴질 수 있습니다.",
+      "source_ids": [
+        "MOIST_TECH",
+        "COMEDO_LIMIT"
+      ]
+    },
+    {
+      "rule_id": "emollients",
+      "canonical_group": "light_emollient",
+      "display_name_ko": "유연·보습 성분",
+      "aliases": [
+        "squalane",
+        "스쿠알란",
+        "caprylic/capric triglyceride",
+        "카프릴릭/카프릭트라이글리세라이드",
+        "jojoba esters",
+        "호호바에스터",
+        "hydrogenated lecithin",
+        "하이드로제네이티드레시틴",
+        "isoamyl laurate",
+        "아이소아밀라우레이트"
+      ],
+      "functions": [
+        "emollient"
+      ],
+      "beneficial_for": [
+        "dry",
+        "dehydrated_oily",
+        "combination",
+        "normal"
+      ],
+      "caution_for": [],
+      "possible_concerns": [],
+      "condition": "가벼움·무거움은 완제품 조성에 따라 달라지므로 단일 성분으로 확정하지 않음",
+      "evidence_level": "functional_reference",
+      "severity_default": "beneficial",
+      "user_message_ko": "유연 성분은 피부 표면을 부드럽게 하고 건조감을 줄이는 데 도움을 줄 수 있습니다.",
+      "source_ids": [
+        "EU_COSING",
+        "MOIST_TECH"
+      ]
+    },
+    {
+      "rule_id": "barrier_lipids",
+      "canonical_group": "barrier_support",
+      "display_name_ko": "장벽 보조 지질",
+      "aliases": [
+        "ceramide np",
+        "세라마이드엔피",
+        "ceramide ap",
+        "세라마이드에이피",
+        "ceramide eop",
+        "세라마이드이오피",
+        "ceramide ns",
+        "세라마이드엔에스",
+        "ceramide as",
+        "세라마이드에이에스",
+        "ceramide ng",
+        "세라마이드엔지",
+        "cholesterol",
+        "콜레스테롤",
+        "phytosphingosine",
+        "피토스핑고신",
+        "linoleic acid",
+        "리놀레익애씨드"
+      ],
+      "functions": [
+        "barrier_support",
+        "emollient"
+      ],
+      "beneficial_for": [
+        "dry",
+        "dehydrated_oily",
+        "sensitive",
+        "acne_prone",
+        "combination",
+        "barrier_impaired"
+      ],
+      "caution_for": [],
+      "possible_concerns": [],
+      "condition": "완제품의 지질 비율과 함량에 따라 효과 차이",
+      "evidence_level": "expert_consensus_review",
+      "severity_default": "beneficial",
+      "user_message_ko": "세라마이드·콜레스테롤 등 장벽 지질은 피부 장벽 보조와 건조 완화에 긍정 요소가 될 수 있습니다.",
+      "source_ids": [
+        "CERAMIDE_ACNE",
+        "MOIST_TECH"
+      ]
+    },
+    {
+      "rule_id": "bland_soothing",
+      "canonical_group": "bland_moisturizer",
+      "display_name_ko": "진정·완화 보조 성분",
+      "aliases": [
+        "allantoin",
+        "알란토인",
+        "madecassoside",
+        "마데카소사이드",
+        "dipotassium glycyrrhizate",
+        "다이포타슘글리시리제이트",
+        "bisabolol",
+        "비사보롤",
+        "beta-glucan",
+        "베타-글루칸",
+        "ectoin",
+        "엑토인"
+      ],
+      "functions": [
+        "soothing",
+        "skin_conditioning"
+      ],
+      "beneficial_for": [
+        "sensitive",
+        "dry",
+        "dehydrated_oily",
+        "barrier_impaired"
+      ],
+      "caution_for": [],
+      "possible_concerns": [],
+      "condition": "진정 효과를 완제품 수준에서 보장하지 않으며 개인 식물성 원료 반응 이력은 별도 적용",
+      "evidence_level": "functional_reference",
+      "severity_default": "beneficial",
+      "user_message_ko": "진정·완화 보조 성분은 민감하거나 건조한 피부에 긍정 요소가 될 수 있으나 완제품 효과는 배합과 제형에 따라 달라집니다.",
+      "source_ids": [
+        "EU_COSING"
+      ]
+    },
+    {
+      "rule_id": "niacinamide",
+      "canonical_group": "barrier_support",
+      "display_name_ko": "나이아신아마이드",
+      "aliases": [
+        "niacinamide",
+        "나이아신아마이드",
+        "nicotinamide",
+        "니코틴아마이드"
+      ],
+      "functions": [
+        "skin_conditioning",
+        "barrier_support"
+      ],
+      "beneficial_for": [
+        "oily",
+        "acne_prone",
+        "dry",
+        "dehydrated_oily",
+        "combination"
+      ],
+      "caution_for": [],
+      "possible_concerns": [
+        "stinging_at_high_concentration_possible"
+      ],
+      "condition": "농도를 알 수 없어 고함량 자극 여부를 성분표만으로 판단하지 않음",
+      "evidence_level": "functional_and_clinical_inference",
+      "severity_default": "beneficial",
+      "user_message_ko": "나이아신아마이드는 피부 컨디셔닝과 장벽 보조에 긍정 요소가 될 수 있지만 민감 피부에서는 제품별 사용감을 확인하세요.",
+      "source_ids": [
+        "EU_COSING"
+      ]
+    },
+    {
+      "rule_id": "aha",
+      "canonical_group": "strong_exfoliant",
+      "display_name_ko": "AHA 각질 제거 성분",
+      "aliases": [
+        "glycolic acid",
+        "글라이콜릭애씨드",
+        "lactic acid",
+        "락틱애씨드",
+        "mandelic acid",
+        "만델릭애씨드",
+        "citric acid",
+        "시트릭애씨드",
+        "malic acid",
+        "말릭애씨드",
+        "tartaric acid",
+        "타타릭애씨드"
+      ],
+      "functions": [
+        "exfoliant"
+      ],
+      "beneficial_for": [
+        "oily",
+        "acne_prone"
+      ],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily",
+        "barrier_impaired"
+      ],
+      "possible_concerns": [
+        "stinging",
+        "irritation",
+        "dryness"
+      ],
+      "condition": "시트릭애씨드 등은 pH 조절제로도 쓰이므로 기능·농도·pH를 성분표만으로 확정하지 않음",
+      "evidence_level": "peer_reviewed_review",
+      "severity_default": "context_dependent",
+      "user_message_ko": "AHA 계열은 피부결 관리에 도움을 줄 수 있지만 농도와 pH에 따라 건조·따가움 가능성이 있어 민감·건조 피부에서는 확인이 필요합니다.",
+      "source_ids": [
+        "AHA_REVIEW",
+        "FDA_INGREDIENTS"
+      ]
+    },
+    {
+      "rule_id": "pha",
+      "canonical_group": "milder_exfoliant",
+      "display_name_ko": "PHA 각질 제거 성분",
+      "aliases": [
+        "gluconolactone",
+        "글루코노락톤",
+        "lactobionic acid",
+        "락토바이오닉애씨드",
+        "maltobionic acid",
+        "말토바이오닉애씨드"
+      ],
+      "functions": [
+        "exfoliant",
+        "humectant"
+      ],
+      "beneficial_for": [
+        "sensitive",
+        "dry",
+        "combination"
+      ],
+      "caution_for": [],
+      "possible_concerns": [
+        "possible_irritation"
+      ],
+      "condition": "AHA보다 내약성이 나을 수 있으나 무자극을 의미하지 않음",
+      "evidence_level": "clinical_study",
+      "severity_default": "low_contextual",
+      "user_message_ko": "PHA는 비교적 순한 각질 관리 성분으로 평가되지만 민감 피부에서도 제형과 사용 빈도에 따라 반응을 확인하세요.",
+      "source_ids": [
+        "PHA_TOL"
+      ]
+    },
+    {
+      "rule_id": "salicylic_acid",
+      "canonical_group": "keratolytic_acne_support",
+      "display_name_ko": "살리실릭애씨드·BHA",
+      "aliases": [
+        "salicylic acid",
+        "살리실릭애씨드",
+        "bha",
+        "beta hydroxy acid",
+        "베타하이드록시애씨드"
+      ],
+      "functions": [
+        "keratolytic",
+        "exfoliant",
+        "acne_support"
+      ],
+      "beneficial_for": [
+        "oily",
+        "acne_prone"
+      ],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily"
+      ],
+      "possible_concerns": [
+        "dryness",
+        "irritation",
+        "stinging"
+      ],
+      "condition": "농도·사용 빈도와 다른 각질 제거제·레티노이드 중복 여부 확인",
+      "evidence_level": "dermatology_practice_and_review",
+      "severity_default": "context_dependent",
+      "user_message_ko": "살리실릭애씨드는 모공 관리에 도움을 줄 수 있지만 건조·민감 피부 또는 중복 각질 관리에서는 건조와 자극 가능성을 확인하세요.",
+      "source_ids": [
+        "AAD_OILY",
+        "AAD_ACNE",
+        "FDA_INGREDIENTS"
+      ]
+    },
+    {
+      "rule_id": "retinoids",
+      "canonical_group": "retinoid",
+      "display_name_ko": "레티노이드 계열",
+      "aliases": [
+        "retinol",
+        "레티놀",
+        "retinal",
+        "레티날",
+        "retinaldehyde",
+        "레티날데하이드",
+        "retinyl palmitate",
+        "레티닐팔미테이트",
+        "retinyl acetate",
+        "레티닐아세테이트",
+        "hydroxypinacolone retinoate",
+        "하이드록시피나콜론레티노에이트",
+        "tretinoin",
+        "트레티노인",
+        "adapalene",
+        "아다팔렌"
+      ],
+      "functions": [
+        "cell_turnover",
+        "acne_support",
+        "antiaging"
+      ],
+      "beneficial_for": [
+        "acne_prone",
+        "oily"
+      ],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily",
+        "barrier_impaired"
+      ],
+      "possible_concerns": [
+        "dryness",
+        "peeling",
+        "erythema",
+        "burning",
+        "stinging"
+      ],
+      "condition": "의약품과 화장품 성분을 구분하고 사용 단계·농도·임신 관련 안내는 별도 의료 정보로 처리",
+      "evidence_level": "peer_reviewed_review",
+      "severity_default": "moderate_to_high",
+      "user_message_ko": "레티노이드 계열은 피부결과 여드름 관리에 도움을 줄 수 있지만 초기 건조·각질·따가움 가능성이 있어 민감·건조 피부에서는 주의가 필요합니다.",
+      "source_ids": [
+        "RETINOID_AE"
+      ]
+    },
+    {
+      "rule_id": "essential_oils",
+      "canonical_group": "botanical_allergen",
+      "display_name_ko": "에센셜오일·향이 강한 식물 오일",
+      "aliases": [
+        "lavandula angustifolia oil",
+        "라벤더오일",
+        "lavender oil",
+        "citrus limon peel oil",
+        "레몬껍질오일",
+        "citrus aurantium bergamia fruit oil",
+        "베르가모트오일",
+        "bergamot oil",
+        "melaleuca alternifolia leaf oil",
+        "티트리잎오일",
+        "tea tree leaf oil",
+        "eucalyptus globulus leaf oil",
+        "유칼립투스잎오일",
+        "peppermint oil",
+        "페퍼민트오일",
+        "mentha piperita oil",
+        "rosemary leaf oil",
+        "로즈마리잎오일",
+        "rosmarinus officinalis leaf oil",
+        "ylang ylang oil",
+        "일랑일랑꽃오일"
+      ],
+      "functions": [
+        "botanical",
+        "fragrance"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "sensitive"
+      ],
+      "possible_concerns": [
+        "sensitisation",
+        "irritation"
+      ],
+      "condition": "모든 식물 추출물을 일괄 주의 처리하지 않고 향이 강한 에센셜오일을 별도 분류; 개인 반응 이력 우선",
+      "evidence_level": "peer_reviewed_review",
+      "severity_default": "low_to_moderate",
+      "user_message_ko": "에센셜오일도 향료 성분과 마찬가지로 일부 민감 피부에서 자극이나 접촉 반응을 일으킬 수 있습니다.",
+      "source_ids": [
+        "BOTANICAL_ACD",
+        "COSMETIC_ACD"
+      ]
+    },
+    {
+      "rule_id": "lanolin_history",
+      "canonical_group": "personal_allergen",
+      "display_name_ko": "라놀린 계열",
+      "aliases": [
+        "lanolin",
+        "라놀린",
+        "lanolin alcohol",
+        "라놀린알코올",
+        "acetylated lanolin alcohol",
+        "아세틸레이티드라놀린알코올",
+        "wool alcohols",
+        "양모알코올"
+      ],
+      "functions": [
+        "emollient"
+      ],
+      "beneficial_for": [
+        "dry"
+      ],
+      "caution_for": [
+        "sensitive"
+      ],
+      "possible_concerns": [
+        "sensitisation",
+        "contact_dermatitis"
+      ],
+      "condition": "일반 사용자보다 라놀린·양모알코올 반응 이력 또는 장벽 손상 피부에서 우선 확인",
+      "evidence_level": "contact_allergy_review",
+      "severity_default": "high_if_history",
+      "user_message_ko": "라놀린은 보습 성분으로 쓰이지만 일부 사용자에게 접촉 알레르기가 보고되어 관련 반응 이력이 있다면 확인하세요.",
+      "source_ids": [
+        "COSMETIC_ACD"
+      ]
+    },
+    {
+      "rule_id": "talc_powder",
+      "canonical_group": "powder_absorbent",
+      "display_name_ko": "탤크",
+      "aliases": [
+        "talc",
+        "탤크",
+        "탈크"
+      ],
+      "functions": [
+        "absorbent",
+        "anticaking",
+        "bulking"
+      ],
+      "beneficial_for": [
+        "oily"
+      ],
+      "caution_for": [
+        "dry",
+        "dehydrated_oily"
+      ],
+      "possible_concerns": [
+        "dry_feel",
+        "powdery_feel"
+      ],
+      "condition": "일반 탤크 자체를 금지·유해 성분으로 판정하지 않음; 분말 제형·함량·불순물 기준을 성분표만으로 확인할 수 없음",
+      "evidence_level": "official_function_reference",
+      "severity_default": "reference",
+      "user_message_ko": "탤크는 흡유·분체 기능으로 사용될 수 있어 지성 피부에는 산뜻하게 느껴질 수 있지만 건조 피부에서는 제형에 따라 건조감이 느껴질 수 있습니다.",
+      "source_ids": [
+        "EU_COSING",
+        "FDA_INGREDIENTS"
+      ]
+    },
+    {
+      "rule_id": "alumina_powder",
+      "canonical_group": "powder_texture_agent",
+      "display_name_ko": "알루미나",
+      "aliases": [
+        "alumina",
+        "알루미나",
+        "aluminum oxide",
+        "산화알루미늄"
+      ],
+      "functions": [
+        "absorbent",
+        "abrasive",
+        "opacifying"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "sensitive"
+      ],
+      "possible_concerns": [
+        "friction_or_dry_feel"
+      ],
+      "condition": "입자 크기·표면처리·함량을 알 수 없어 자극을 확정하지 않으며 민감 피부의 사용감 참고로만 표시",
+      "evidence_level": "official_function_reference_and_functional_inference",
+      "severity_default": "reference",
+      "user_message_ko": "알루미나는 분체의 질감과 흡유감 조절 등에 사용될 수 있으며 민감 피부에서는 제품의 마찰감이나 건조감을 확인할 수 있습니다.",
+      "source_ids": [
+        "EU_COSING"
+      ]
+    },
+    {
+      "rule_id": "silica_kaolin_powders",
+      "canonical_group": "powder_absorbent",
+      "display_name_ko": "실리카·카올린 등 흡유 분체",
+      "aliases": [
+        "silica",
+        "실리카",
+        "hydrated silica",
+        "하이드레이티드실리카",
+        "kaolin",
+        "카올린",
+        "magnesium carbonate",
+        "마그네슘카보네이트",
+        "corn starch modified",
+        "옥수수전분",
+        "oryza sativa starch",
+        "쌀전분"
+      ],
+      "functions": [
+        "absorbent",
+        "bulking"
+      ],
+      "beneficial_for": [
+        "oily"
+      ],
+      "caution_for": [
+        "dry",
+        "dehydrated_oily"
+      ],
+      "possible_concerns": [
+        "dry_feel",
+        "tightness"
+      ],
+      "condition": "분말 함량과 제형에 따라 사용감 차이; 세정 마스크와 색조 제품을 동일하게 단정하지 않음",
+      "evidence_level": "official_function_reference_and_functional_inference",
+      "severity_default": "reference",
+      "user_message_ko": "흡유 분체는 번들거림을 줄이는 데 도움을 줄 수 있지만 건조·수부지 피부에서는 당김이나 건조감을 확인하세요.",
+      "source_ids": [
+        "EU_COSING"
+      ]
+    },
+    {
+      "rule_id": "astringent_pattern",
+      "canonical_group": "astringent_pattern",
+      "display_name_ko": "수렴·쿨링 자극 가능 성분",
+      "aliases": [
+        "witch hazel water",
+        "위치하젤수",
+        "hamamelis virginiana water",
+        "위치하젤수",
+        "menthol",
+        "멘톨",
+        "camphor",
+        "캠퍼"
+      ],
+      "functions": [
+        "astringent",
+        "cooling"
+      ],
+      "beneficial_for": [
+        "oily"
+      ],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily"
+      ],
+      "possible_concerns": [
+        "stinging",
+        "dryness",
+        "irritation"
+      ],
+      "condition": "추출물 농도와 제형을 알 수 없어 조건부 참고로 표시",
+      "evidence_level": "dermatology_guideline_and_functional_inference",
+      "severity_default": "low_contextual",
+      "user_message_ko": "수렴감이나 쿨링감을 주는 일부 성분은 지성 피부에서 산뜻할 수 있지만 민감·건조 피부에서는 따가움이나 건조감을 확인하세요.",
+      "source_ids": [
+        "AAD_ROSACEA_ING",
+        "EU_COSING"
+      ]
+    },
+    {
+      "rule_id": "known_personal_allergen",
+      "canonical_group": "known_personal_allergen",
+      "display_name_ko": "개인 알레르기·과거 반응 성분",
+      "aliases": [],
+      "functions": [
+        "personal_history_rule"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "normal",
+        "dry",
+        "oily",
+        "combination",
+        "dehydrated_oily",
+        "sensitive",
+        "acne_prone",
+        "barrier_impaired"
+      ],
+      "possible_concerns": [
+        "personal_recurrence"
+      ],
+      "condition": "사용자가 known_allergies 또는 previous_reactions로 입력한 정규화 성분명과 정확히 일치할 때 모든 일반 규칙보다 우선",
+      "evidence_level": "personal_history_priority",
+      "severity_default": "high",
+      "user_message_ko": "과거 동일 성분에 반응했거나 알레르기로 확인된 이력이 있어 가장 높은 우선순위로 확인해야 합니다.",
+      "source_ids": [
+        "COSMETIC_ACD"
+      ]
+    },
+    {
+      "rule_id": "multiple_exfoliants",
+      "canonical_group": "multiple_exfoliants",
+      "display_name_ko": "각질 제거·세포 회전 성분 중복",
+      "aliases": [],
+      "functions": [
+        "combination_rule"
+      ],
+      "beneficial_for": [],
+      "caution_for": [
+        "dry",
+        "sensitive",
+        "dehydrated_oily",
+        "acne_prone",
+        "barrier_impaired"
+      ],
+      "possible_concerns": [
+        "cumulative_irritation",
+        "dryness",
+        "barrier_disruption"
+      ],
+      "condition": "strong_exfoliant, milder_exfoliant, keratolytic_acne_support, retinoid 중 서로 다른 그룹이 두 개 이상 탐지될 때 적용",
+      "evidence_level": "functional_inference",
+      "severity_default": "moderate",
+      "user_message_ko": "각질 제거·세포 회전 성분이 여러 종류 겹치면 누적 자극과 건조 가능성이 커질 수 있어 사용 빈도를 보수적으로 잡는 것이 좋습니다.",
+      "source_ids": [
+        "AHA_REVIEW",
+        "RETINOID_AE"
+      ]
+    },
+    {
+      "rule_id": "noncomedogenic_claim",
+      "canonical_group": "product_claim",
+      "display_name_ko": "논코메도제닉·오일프리 표시",
+      "aliases": [
+        "non-comedogenic",
+        "noncomedogenic",
+        "won't clog pores",
+        "oil-free",
+        "논코메도제닉",
+        "오일프리"
+      ],
+      "functions": [
+        "product_level_claim"
+      ],
+      "beneficial_for": [
+        "oily",
+        "acne_prone"
+      ],
+      "caution_for": [],
+      "possible_concerns": [
+        "claim_not_absolute"
+      ],
+      "condition": "성분이 아니라 제품 메타데이터에서 수집하며 모든 사용자에게 트러블이 없음을 보장하지 않음",
+      "evidence_level": "dermatology_guideline_with_label_limit",
+      "severity_default": "supportive_not_guaranteed",
+      "user_message_ko": "논코메도제닉·오일프리 표시는 여드름성 피부에서 참고할 수 있지만 절대적인 무트러블 보장은 아닙니다.",
+      "source_ids": [
+        "AAD_ACNE",
+        "AAD_MOIST_ACNE",
+        "LABEL_LIMIT"
+      ]
+    }
+  ]
+}

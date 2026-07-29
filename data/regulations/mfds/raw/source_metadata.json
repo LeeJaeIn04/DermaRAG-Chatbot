@@ -1,0 +1,16 @@
+{
+  "authority": "식품의약품안전처",
+  "document_title": "화장품 안전기준 등에 관한 규정",
+  "notice_number": "2026-19",
+  "notice_label": "식품의약품안전처 고시 제2026-19호",
+  "notice_date": "2026-03-18",
+  "effective_date": "2026-03-18",
+  "source_type": "official_regulation",
+  "source_page": "https://www.mfds.go.kr/brd/m_211/view.do?seq=14956",
+  "downloaded_at": "2026-07-27",
+  "files": {
+    "prohibited": "mfds_prohibited_ingredients_2026-19.hwpx",
+    "restricted": "mfds_restricted_ingredients_2026-19.hwpx",
+    "full_regulation": "cosmetics_safety_standard_2026-19.hwpx"
+  }
+}

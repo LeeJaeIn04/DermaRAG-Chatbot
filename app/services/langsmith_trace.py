@@ -10,6 +10,8 @@ from app.schemas import ChatRequest
 )
 def invoke_derma_rag(
     request: ChatRequest,
+    *,
+    api_endpoint: str = "/chat",
 ) -> dict[str, Any]:
     final_state = derma_rag_graph.invoke(
         {"request": request},
@@ -18,7 +20,7 @@ def invoke_derma_rag(
             "tags": ["graph-run"],
             "metadata": {
                 "environment": "development",
-                "api_endpoint": "/chat",
+                "api_endpoint": api_endpoint,
             },
         },
     )

@@ -204,16 +204,67 @@ def deduplicate_documents(docs: list[Document]) -> list[Document]:
     return unique_docs
 
 
-def search_documents(query: str, search_k: int = 8) -> list[Document]:
-    exact_docs = exact_match_documents(query, limit=search_k)
+VECTOR_RELEVANCE_THRESHOLD = 0.75
+VECTOR_CANDIDATE_K = 8
+
+
+def search_documents(
+    query: str,
+    search_k: int = 8,
+) -> list[Document]:
+    """
+    성분 문서를 검색한다.
+
+    1. exact match가 있으면 exact match 결과를 반환한다.
+    2. exact match가 없으면 vector search를 실행한다.
+    3. vector relevance score가 기준 이상인 문서만 반환한다.
+    """
+
+    exact_docs = exact_match_documents(
+        query,
+        limit=search_k,
+    )
 
     if exact_docs:
         return exact_docs[:search_k]
 
-    retriever = get_retriever(search_k=search_k)
-    vector_docs = retriever.invoke(query)
+    vectorstore = get_vectorstore()
 
-    for doc in vector_docs:
-        doc.metadata["retrieval_type"] = "vector_search"
+    vector_results = (
+        vectorstore
+        .similarity_search_with_relevance_scores(
+            query=query,
+            k=max(
+                search_k,
+                VECTOR_CANDIDATE_K,
+            ),
+        )
+    )
 
-    return vector_docs[:search_k]
+    filtered_docs: list[Document] = []
+
+    for doc, score in vector_results:
+        relevance_score = float(score)
+
+        # 관련성이 낮은 문서는 RAG 근거로 사용하지 않는다.
+        if (
+            relevance_score
+            < VECTOR_RELEVANCE_THRESHOLD
+        ):
+            continue
+
+        doc.metadata[
+            "retrieval_type"
+        ] = "vector_search"
+
+        # API 응답에서는 0~100 형태로 표시한다.
+        doc.metadata[
+            "match_score"
+        ] = round(
+            relevance_score * 100,
+            2,
+        )
+
+        filtered_docs.append(doc)
+
+    return filtered_docs[:search_k]

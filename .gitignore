@@ -1,35 +1,102 @@
-# Environment variables
+# ==========================================================================
+# 비밀정보 및 환경 설정
+# ==========================================================================
 .env
 .env.*
 !.env.example
+credentials*.json
+service-account*.json
+*.pem
+*.key
 
-# Virtual environment
+# ==========================================================================
+# Python / uv 가상환경 및 캐시
+# ==========================================================================
 .venv/
 venv/
+__pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.pyright/
+.pyre/
+.tox/
+.nox/
+coverage.xml
+*.egg-info/
+.eggs/
+wheelhouse/
 
-# Python cache
-__pycache__/
-*.pyc
-
-# OS files
+# ==========================================================================
+# IDE / OS 생성 파일
+# ==========================================================================
 .DS_Store
+.idea/
+# .vscode/settings.json은 팀 공유용(cSpell 사전 등)이라 커밋 유지,
+# 그 외 개인 설정(launch.json 등)만 제외한다.
+.vscode/*
+!.vscode/settings.json
+# .claude/settings.json은 프로젝트 공용 설정이라 커밋 유지,
+# 개인 로컬 override만 제외한다.
+.claude/settings.local.json
+.claude/
+.AppleDouble
+.LSOverride
+._*
 
-vectorstore/
-data/*.jsonl
-data/*.txt
-evals/
-node_modules/
-.vscode/
-
+# ==========================================================================
+# 로컬 DB, 런타임 캐시, 로그
+# ==========================================================================
 *.db
 *.sqlite
 *.sqlite3
-data/derma_rag.db
-
+*.log
+*.pid
+*.tmp
+*.bak
+*~
 playwright-report/
 test-results/
+debug_artifacts/
 
+# ==========================================================================
+# 벡터스토어 (임베딩으로 재생성 가능한 산출물)
+# ==========================================================================
+vectorstore/
+
+# ==========================================================================
+# 평가 데이터셋 (스크립트로 재생성)
+# ==========================================================================
+evals/
+
+# ==========================================================================
+# 프론트엔드 빌드 산출물 및 의존성
+# ==========================================================================
+node_modules/
+dist/
+build/
+.next/
+.vite/
+frontend/coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 환경 변수 예시 파일 허용
+!frontend/.env.example
+
+# ==========================================================================
+# 임시 확인용 스크립트 (커밋 대상 아님)
+# ==========================================================================
 check_oliveyoung_search.py
 check_oliveyoung_ingredients.py
+inspect_hwpx.py
+inspect_mfds_allergen_pdf.py
+
+# MFDS 원본 문서
+data/allergens/mfds/raw/*.pdf
+data/regulations/mfds/raw/*.hwpx

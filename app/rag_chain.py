@@ -2,7 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from app.config import settings
 from app.retriever import search_documents
 from app.schemas import ChatRequest, ChatResponse, Source
-from typing import Any
+from typing import Any, Iterable
 
 
 def validate_environment() -> None:
@@ -20,21 +20,63 @@ def build_search_query(request: ChatRequest) -> str:
     return request.question
 
 
+def normalize_ingredient_name(value: str) -> str:
+    """앞뒤 공백과 연속 공백만 정리한다. 쉼표/슬래시/하이픈/괄호는
+    성분명 자체의 일부일 수 있으므로 건드리지 않는다."""
+    return " ".join(value.split())
+
+
+def deduplicate_ingredient_names(values: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    deduplicated: list[str] = []
+
+    for value in values:
+        if value not in seen:
+            seen.add(value)
+            deduplicated.append(value)
+
+    return deduplicated
+
+
 def split_ingredients(ingredient_list: str | None) -> list[str]:
+    """`/chat`의 하위 호환용 문자열 파서.
+
+    쉼표(전각 포함)만 구분자로 사용한다. `/`는 성분명 안에도
+    쓰이므로(예: "코코-카프릴레이트/카프레이트") 구분자로 취급하지 않는다.
+    """
     if not ingredient_list:
         return []
 
-    normalized = ingredient_list.replace("，", ",").replace("/", ",")
+    normalized = ingredient_list.replace("，", ",")
 
     ingredients = []
 
     for item in normalized.split(","):
-        name = item.strip()
+        name = normalize_ingredient_name(item)
 
         if name:
             ingredients.append(name)
 
     return ingredients
+
+
+def resolve_ingredients(
+    *,
+    ingredients: list[str] | None,
+    ingredient_list: str | None,
+) -> list[str]:
+    """구조화된 성분 목록을 우선 사용하고, 없을 때만 기존 문자열을
+    파싱한다. 목록이 있으면 다시 split하지 않아 성분명 내부의 쉼표/
+    슬래시가 훼손되지 않는다."""
+    if ingredients:
+        normalized = [
+            normalize_ingredient_name(item)
+            for item in ingredients
+            if item and item.strip()
+        ]
+        return deduplicate_ingredient_names(normalized)
+
+    return deduplicate_ingredient_names(split_ingredients(ingredient_list))
 
 
 def deduplicate_docs(docs) -> list:
@@ -58,17 +100,26 @@ def deduplicate_docs(docs) -> list:
 
 
 def retrieve_documents(
-        request: ChatRequest, 
+        request: ChatRequest,
         ingredient_names: list[str] | None = None,
 )  -> list[Any]:
-    ingredient_names = split_ingredients(request.ingredient_list)
+    if ingredient_names is None:
+        ingredient_names = resolve_ingredients(
+            ingredients=request.ingredients,
+            ingredient_list=request.ingredient_list,
+        )
 
     if ingredient_names:
         docs = []
 
         for ingredient_name in ingredient_names:
-            docs.extend(search_documents(ingredient_name, search_k=1))
-    
+            matched_docs = search_documents(ingredient_name, search_k=1)
+
+            for doc in matched_docs:
+                doc.metadata["query_ingredient"] = ingredient_name
+
+            docs.extend(matched_docs)
+
     else:
         search_query = build_search_query(request)
         docs = search_documents(search_query, search_k=8)
@@ -100,7 +151,33 @@ def build_context(docs) -> str:
     return "\n\n".join(formatted_docs)
 
 
+def build_regulation_section(request: ChatRequest) -> str:
+    """`request.regulation_context`가 있으면 Gemini 프롬프트에 이어
+    붙일 수 있는 형태로 반환한다. `build_regulation_context()`가 만든
+    문자열은 이미 자체 헤더를 포함하므로 그대로 이어 붙이기만 한다."""
+    regulation_context = (request.regulation_context or "").strip()
+
+    if not regulation_context:
+        return ""
+
+    return f"\n\n{regulation_context}"
+
+
+def build_allergen_section(request: ChatRequest) -> str:
+    """`request.allergen_context`가 있으면 Gemini 프롬프트에 이어
+    붙일 수 있는 형태로 반환한다. `build_allergen_context()`가 만든
+    문자열은 이미 자체 헤더를 포함하므로 그대로 이어 붙이기만 한다."""
+    allergen_context = (request.allergen_context or "").strip()
+
+    if not allergen_context:
+        return ""
+
+    return f"\n\n{allergen_context}"
+
+
 def build_prompt(request: ChatRequest, context: str) -> str:
+    regulation_section = build_regulation_section(request)
+    allergen_section = build_allergen_section(request)
 
     return f"""
     당신은 화장품 성분 기반 피부 반응 원인 후보를 분석하는 RAG 챗봇입니다.
@@ -116,6 +193,18 @@ def build_prompt(request: ChatRequest, context: str) -> str:
     8. 사용자 전성분표에는 있지만 검색 결과에 없는 성분은 "현재 구축된 성분 DB에서 직접 근거를 찾지 못했습니다"라고 표현하세요.
     9. 검색된 식약처 원료성분 정보는 성분의 정의, 기원, 구조, 표시명에 대한 정보입니다. 해당 문서만으로 특정 성분의 자극성, 안전성, 여드름 유발 가능성을 단정하지 마세요.
     10. 검색 문서에 직접 없는 효능/위험성/자극 가능성은 일반적인 가능성으로만 표현하고, 근거 문서에서 확인된 사실과 분리해서 설명하세요.
+    11. restricted는 무조건 위험하거나 사용할 수 없는 성분이라는 뜻이 아니라, 허용 용도·최대 농도·사용 조건이 정해진 원료라는 뜻입니다.
+    12. 전성분표만으로는 실제 배합 농도를 알 수 없으므로 사용한도 초과나 법규 위반 여부를 판단하지 마세요.
+    13. prohibited exact match가 있을 때만 화장품에 사용할 수 없는 원료라고 설명하세요.
+    14. 공식 근거에 없는 독성·자극성·알레르기 가능성을 임의로 만들어내지 마세요. 식약처 규제 데이터만으로 특정 개인의 반응 원인을 설명할 수 없다면 자극성·알레르기 자료가 부족하다고 명확히 밝히세요.
+    15. 사용자가 피부 증상이나 알레르기 이력을 제공하지 않았다면 특정 성분이 그 사람에게 부적합하다고 단정하지 마세요.
+    16. "식약처 규제 정보를 바탕으로 했다"는 표현은 아래 [검색된 성분 근거]에 실제 규제 정보가 포함된 경우에만 사용하세요.
+    17. 향료 알레르기 표시 대상이라는 사실만으로 모든 사용자에게 알레르기 반응을 일으킨다고 단정하지 마세요. 이는 식약처의 법적 표시 대상 정보일 뿐입니다.
+    18. 향료 알레르겐 표시 대상 정보만으로 피부 감작성, 접촉 알레르기 또는 자극의 의학적 원인을 직접 증명하지 마세요.
+    19. 전성분표에는 실제 함량이 없으므로 사용 후 씻어내는 제품 0.01% 초과 또는 사용 후 씻어내지 않는 제품 0.001% 초과 여부를 판단하지 마세요.
+    20. 사용자의 기존 알레르기 이력이나 패치 테스트 결과가 없다면 향료 알레르겐 성분이 현재 증상의 원인이라고 단정하지 마세요.
+    21. 알레르겐 목록에 exact match되지 않은 성분을 향료 알레르겐이라고 임의로 추정하지 마세요.
+    22. "식약처 향료 알레르기 표시 대상 정보를 바탕으로 했다"는 표현은 아래 [검색된 성분 근거]에 실제 알레르겐 정보가 포함된 경우에만 사용하세요.
 
     [사용자 입력]
     질문/피부 반응:
@@ -131,7 +220,7 @@ def build_prompt(request: ChatRequest, context: str) -> str:
     {request.current_routine or "입력 없음"}
 
     [검색된 성분 근거]
-    {context}
+    {context}{regulation_section}{allergen_section}
 
     [답변 형식]
     1. 요약
@@ -166,6 +255,8 @@ def build_agent_prompt(
     }
 
     guidance = route_guidance.get(route, route_guidance["general_answer"])
+    regulation_section = build_regulation_section(request)
+    allergen_section = build_allergen_section(request)
 
     return f"""
     당신은 화장품 성분 기반 피부 반응 원인 후보를 안전하게 분석하는 DermaRAG Agent입니다.
@@ -184,6 +275,18 @@ def build_agent_prompt(
     5. 증상이 심하거나 오래 지속되거나 통증, 진물, 부종이 있으면 피부과 전문의 상담을 권장하세요.
     6. 답변은 한국어로 작성하세요.
     7. 반드시 아래 1~5번 형식을 유지하세요.
+    8. restricted는 무조건 위험하거나 사용할 수 없는 성분이라는 뜻이 아니라, 허용 용도·최대 농도·사용 조건이 정해진 원료라는 뜻입니다.
+    9. 전성분표만으로는 실제 배합 농도를 알 수 없으므로 사용한도 초과나 법규 위반 여부를 판단하지 마세요.
+    10. prohibited exact match가 있을 때만 화장품에 사용할 수 없는 원료라고 설명하세요.
+    11. 공식 근거에 없는 독성·자극성·알레르기 가능성을 임의로 만들어내지 마세요. 식약처 규제 데이터만으로 특정 개인의 반응 원인을 설명할 수 없다면 자극성·알레르기 자료가 부족하다고 명확히 밝히세요.
+    12. 사용자가 피부 증상이나 알레르기 이력을 제공하지 않았다면 특정 성분이 그 사람에게 부적합하다고 단정하지 마세요.
+    13. "식약처 규제 정보를 바탕으로 했다"는 표현은 아래 [검색된 성분 근거]에 실제 규제 정보가 포함된 경우에만 사용하세요.
+    14. 향료 알레르기 표시 대상이라는 사실만으로 모든 사용자에게 알레르기 반응을 일으킨다고 단정하지 마세요. 이는 식약처의 법적 표시 대상 정보일 뿐입니다.
+    15. 향료 알레르겐 표시 대상 정보만으로 피부 감작성, 접촉 알레르기 또는 자극의 의학적 원인을 직접 증명하지 마세요.
+    16. 전성분표에는 실제 함량이 없으므로 사용 후 씻어내는 제품 0.01% 초과 또는 사용 후 씻어내지 않는 제품 0.001% 초과 여부를 판단하지 마세요.
+    17. 사용자의 기존 알레르기 이력이나 패치 테스트 결과가 없다면 향료 알레르겐 성분이 현재 증상의 원인이라고 단정하지 마세요.
+    18. 알레르겐 목록에 exact match되지 않은 성분을 향료 알레르겐이라고 임의로 추정하지 마세요.
+    19. "식약처 향료 알레르기 표시 대상 정보를 바탕으로 했다"는 표현은 아래 [검색된 성분 근거]에 실제 알레르겐 정보가 포함된 경우에만 사용하세요.
 
     [사용자 입력]
     질문/피부 반응:
@@ -196,7 +299,7 @@ def build_agent_prompt(
     {request.current_routine or "입력 없음"}
 
     [검색된 성분 근거]
-    {context}
+    {context}{regulation_section}{allergen_section}
 
     [감지된 주의 정보]
     {", ".join(warnings) if warnings else "없음"}
@@ -264,6 +367,7 @@ def build_sources(docs: list[Any]) -> list[Source]:
             cas_no=doc.metadata.get("cas_no"),
             retrieval_type=doc.metadata.get("retrieval_type"),
             match_score=doc.metadata.get("match_score"),
+            query_ingredient=doc.metadata.get("query_ingredient"),
         )
         for doc in docs
     ]

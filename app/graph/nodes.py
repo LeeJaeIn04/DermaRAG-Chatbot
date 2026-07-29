@@ -1,6 +1,6 @@
 from app.graph.state import DermaRagState
 from app.rag_chain import (
-    split_ingredients,
+    resolve_ingredients,
     retrieve_documents,
     build_context,
     generate_answer,
@@ -11,6 +11,9 @@ from app.trace_metadata import (
     count_retrieval_types,
     merge_metadata,
 )
+from app.skin_compatibility import (
+    evaluate_product_ingredients,
+)
 
 from typing import Any
 
@@ -19,12 +22,16 @@ def classify_intent_node(
 ) -> dict[str, Any]:
     request = state["request"]
 
+    ingredient_names = resolve_ingredients(
+        ingredients=request.ingredients,
+        ingredient_list=request.ingredient_list,
+    )
+
     question = request.question or ""
-    ingredient_list = request.ingredient_list or ""
     current_routine = request.current_routine or ""
 
     text = (
-        f"{question} {ingredient_list} {current_routine}"
+        f"{question} {' '.join(ingredient_names)} {current_routine}"
     ).lower()
 
     danger_keywords = [
@@ -72,7 +79,7 @@ def classify_intent_node(
             "위험 증상 가능성이 있으므로 안전 안내를 우선합니다."
         ]
 
-    elif ingredient_list.strip():
+    elif ingredient_names:
         route = "ingredient_rag"
         warnings = []
 
@@ -96,18 +103,47 @@ def classify_intent_node(
     return {
         "route": route,
         "warnings": warnings,
+        "ingredient_names": ingredient_names,
         "metadata": metadata,
     }
-    
+
 
 def route_after_classification(state: DermaRagState) -> str:
     return state.get("route", "general_answer")
 
 
-def parse_ingredient_node(state: DermaRagState) -> dict[str, Any]:
+def evaluate_skin_compatibility_node(
+    state: DermaRagState,
+) -> dict[str, Any]:
     request = state["request"]
+    ingredient_names = state.get(
+        "ingredient_names",
+        [],
+    )
 
-    ingredient_names = split_ingredients(request.ingredient_list)
+    if (
+        request.skin_profile is None
+        or not ingredient_names
+    ):
+        return {
+            "skin_compatibility": [],
+        }
+
+    return {
+        "skin_compatibility": (
+            evaluate_product_ingredients(
+                ingredient_names,
+                request.skin_profile,
+            )
+        ),
+    }
+
+
+def parse_ingredient_node(state: DermaRagState) -> dict[str, Any]:
+    # classify_intent_node가 이미 resolve_ingredients()로 최종 목록을
+    # 계산해 두었으므로 여기서는 재사용만 하고 다시 파싱하지 않는다.
+    ingredient_names = state.get("ingredient_names", [])
+
     metadata = merge_metadata(
         state.get("metadata"),
         ingredient_count = len(ingredient_names),
@@ -120,7 +156,8 @@ def parse_ingredient_node(state: DermaRagState) -> dict[str, Any]:
 
 def retrieve_documents_node(state: DermaRagState) -> dict[str, Any]:
     request = state["request"]
-    docs = retrieve_documents(request)
+    ingredient_names = state.get("ingredient_names", [])
+    docs = retrieve_documents(request, ingredient_names=ingredient_names)
     retrieval_counts = count_retrieval_types(docs)
     metadata = merge_metadata(
         state.get("metadata"),

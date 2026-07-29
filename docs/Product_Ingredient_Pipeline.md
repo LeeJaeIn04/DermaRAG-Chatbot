@@ -18,7 +18,9 @@ DermaRAG의 기존 기능은 사용자가 직접 입력한 화장품 전성분�
 → 전성분 추출 및 정규화
 ```
 
-현재는 Mock 상품 검색 Provider와 실제 올리브영 상품 URL을 이용해 기능을 검증하고 있다.
+운영 기본 검색은 실제 올리브영 통합검색 페이지를 읽는
+`OliveYoungProductSearchProvider`를 사용한다. Mock Provider는
+서비스·분류 회귀 테스트용으로만 유지한다.
 
 향후에는 추출한 전성분을 공용 DB에 저장하고, 기존 성분 RAG와 연결하여 상품별 주의 성분과 근거를 설명하는 기능으로 확장할 예정이다.
 
@@ -69,6 +71,7 @@ DermaRAG의 기존 기능은 사용자가 직접 입력한 화장품 전성분�
 - 상품 데이터 모델 정의
 - 상품 검색 Provider 인터페이스 정의
 - Mock 상품 검색 Provider 구현
+- Playwright 기반 실제 올리브영 상품 검색 Provider 구현
 - 상품 검색 API 구현
 - 상품 선택 API 구현
 - 상품 카테고리 분류기 분리
@@ -237,9 +240,13 @@ unknown
 
 ## 7. 상품 검색과 선택
 
-현재 상품 검색은 `MockProductSearchProvider`를 사용한다.
+운영 기본 상품 검색은 `OliveYoungProductSearchProvider`를 사용한다.
+검색어를 UTF-8로 인코딩한 뒤 실제 Chrome으로 통합검색 페이지를
+열고, 상품 카드에서 `goodsNo`, 브랜드, 상품명, 이미지, 가격과
+상세 URL을 추출한다.
 
-Mock Provider에는 다음 세 종류의 검증용 상품이 포함되어 있다.
+`MockProductSearchProvider`는 테스트에서만 사용하며 다음 세 종류의
+검증용 상품을 포함한다.
 
 ```text
 MOCK-SKIN-001
@@ -568,11 +575,12 @@ ingredients에 “정제수” 포함
 
 ## 14. 현재 한계
 
-### 실제 상품 검색 Provider 미구현
+### 실제 상품 검색의 브라우저 의존성
 
-현재 상품 검색은 Mock Provider 기반이다.
-
-실제 올리브영 상품 URL에서 전성분을 추출하는 것은 가능하지만, 올리브영 전체 상품 검색 Provider는 아직 구현하지 않았다.
+올리브영은 일반 HTTP 클라이언트와 headless Chrome 요청에
+Cloudflare 확인 페이지를 반환한다. 따라서 실제 검색도 전성분
+추출과 동일하게 화면 출력이 가능한 Chrome `headless=False`
+환경이 필요하다.
 
 ### 메모리 기반 검색 후보
 
