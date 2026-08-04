@@ -1,4 +1,7 @@
 import re
+import logging
+from copy import copy
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -10,7 +13,6 @@ from playwright.sync_api import (
     Locator,
     Page,
     TimeoutError as PlaywrightTimeoutError,
-    sync_playwright,
 )
 from app.products.models import (
     ProductIngredientResult,
@@ -18,6 +20,35 @@ from app.products.models import (
 from app.products.ingredient_parsing import (
     split_raw_ingredient_text,
 )
+from app.products.playwright_runtime import (
+    CollectionDeadline,
+    CollectionDeadlineExceeded,
+    run_browser_operation,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+class _ExistingPageContext:
+    """공통 runtime이 생성한 page를 기존 추출 로직에 연결한다."""
+
+    def __init__(self, page: Page) -> None:
+        self.page = page
+
+    def new_page(self) -> Page:
+        return self.page
+
+    def close(self) -> None:
+        return None
+
+
+class _ExistingPageBrowser:
+    def __init__(self, page: Page) -> None:
+        self.page = page
+
+    def new_context(self, **_kwargs) -> _ExistingPageContext:
+        return _ExistingPageContext(self.page)
 
 
 # 올리브영 상품정보 제공고시에서 찾을 전성분 항목 제목.
@@ -111,18 +142,17 @@ class OliveYoungIngredientExtractor:
         </td>
     </tr>
 
-    주의: headless=True로 실행하면 올리브영의 Cloudflare 봇 차단
-    페이지("잠시만 기다려 주세요")에 막혀 실제 상품 페이지에
-    도달하지 못한다. 이 프로젝트는 CAPTCHA 우회, stealth 플러그인,
-    프록시 회전 같은 회피 기법을 사용하지 않기로 했으므로(문서
-    9절 참고), 실제 사용자가 보는 것과 동일한 화면을 그대로
-    보여주는 headless=False 실행이 유일하게 검증된 방법이다.
+    headless 여부는 환경별 smoke test 결과에 따라 설정한다.
+    차단 시 CAPTCHA 우회나 stealth 기법을 사용하지 않으며,
+    운영 요청에서 headed 모드로 자동 fallback하지 않는다.
     """
 
     def __init__(
         self,
         headless: bool = False,
         timeout_ms: int = 60_000,
+        deadline_ms: int = 90_000,
+        max_attempts: int = 2,
     ) -> None:
         """
         추출기 실행 옵션을 저장한다.
@@ -130,11 +160,8 @@ class OliveYoungIngredientExtractor:
         Parameters
         ----------
         headless:
-            False가 기본값이다.
-            올리브영은 headless Chrome 세션을 Cloudflare에서
-            차단하기 때문에 True로 실행하면 상품 페이지 대신
-            봇 차단 안내 페이지만 보게 되어 항상 추출에
-            실패한다. 개발 중 디버깅에도 False가 더 쉽다.
+            운영 목표는 True이며, 환경별 smoke test 통과 후
+            설정한다. False는 개발/진단 환경에서만 명시한다.
 
         timeout_ms:
             페이지와 DOM 요소를 기다릴 최대 시간.
@@ -143,6 +170,8 @@ class OliveYoungIngredientExtractor:
 
         self.headless = headless
         self.timeout_ms = timeout_ms
+        self.deadline_ms = deadline_ms
+        self.max_attempts = max_attempts
 
     def extract(
         self,
@@ -188,50 +217,65 @@ class OliveYoungIngredientExtractor:
                 message="올리브영 상품 URL이 아닙니다.",
             )
 
+        def collect(page: Page, deadline: CollectionDeadline):
+            bounded_extractor = copy(self)
+            bounded_extractor.timeout_ms = deadline.remaining_ms(
+                self.timeout_ms
+            )
+            result = bounded_extractor._extract_with_browser(
+                browser=_ExistingPageBrowser(page),
+                product_id=normalized_product_id,
+                product_url=normalized_url,
+            )
+            deadline.remaining_ms(1)
+            return result
+
         try:
-            # Playwright 실행 환경을 시작한다.
-            with sync_playwright() as playwright:
-                # 현재 컴퓨터에 설치된 Google Chrome을 사용한다.
-                browser = playwright.chromium.launch(
-                    channel="chrome",
-                    headless=self.headless,
-                )
+            return run_browser_operation(
+                collect,
+                headless=self.headless,
+                deadline_ms=self.deadline_ms,
+                max_attempts=self.max_attempts,
+            )
 
-                try:
-                    return self._extract_with_browser(
-                        browser=browser,
-                        product_id=normalized_product_id,
-                        product_url=normalized_url,
-                    )
-                finally:
-                    # 성공과 실패 여부에 관계없이
-                    # Chrome 프로세스를 종료한다.
-                    browser.close()
-
-        except PlaywrightTimeoutError as error:
+        except (
+            PlaywrightTimeoutError,
+            CollectionDeadlineExceeded,
+        ) as error:
             # 페이지나 전성분 영역을 제한 시간 안에
             # 찾지 못했을 때의 실패 결과다.
             # 이 시점에는 이미 page/context가 정리된 뒤이므로
             # 디버그 정보는 _extract_with_browser 내부에서
             # 메시지에 미리 포함시켜 전달한다.
+            logger.warning(
+                "Olive Young ingredient extraction timed out (%s, headless=%s): %s",
+                normalized_product_id,
+                self.headless,
+                error,
+            )
             return self._failure_result(
                 product_id=normalized_product_id,
                 product_url=normalized_url,
                 message=(
-                    "제한 시간 안에 전성분 영역을 "
-                    f"찾지 못했습니다: {error}"
+                    "제한 시간 안에 전성분 영역을 찾지 못했습니다. "
+                    "headless smoke test와 외부 사이트 상태를 확인해 주세요."
                 ),
             )
 
         except Exception as error:
             # 예상하지 못한 오류도 프로그램 전체로 전파하지 않고
             # 일정한 실패 결과 형태로 반환한다.
+            logger.warning(
+                "Olive Young ingredient extraction failed (%s, headless=%s): %s",
+                normalized_product_id,
+                self.headless,
+                error,
+            )
             return self._failure_result(
                 product_id=normalized_product_id,
                 product_url=normalized_url,
                 message=(
-                    "전성분 추출 중 오류가 발생했습니다: "
-                    f"{error}"
+                    "전성분 추출 중 브라우저 또는 페이지 오류가 발생했습니다."
                 ),
             )
 
@@ -280,10 +324,11 @@ class OliveYoungIngredientExtractor:
         context: BrowserContext = browser.new_context(
             locale="ko-KR",
         )
+        page: Page | None = None
 
         try:
             # 새로운 Chrome 탭을 연다.
-            page: Page = context.new_page()
+            page = context.new_page()
 
             try:
                 # 올리브영 상품 상세 페이지로 이동한다.
@@ -355,13 +400,17 @@ class OliveYoungIngredientExtractor:
                         page=page,
                         product_id=product_id,
                     )
+                    logger.warning(
+                        "Olive Young ingredient text was empty (%s): %s",
+                        product_id,
+                        debug_info.as_message(),
+                    )
                     return self._failure_result(
                         product_id=product_id,
                         product_url=product_url,
                         message=(
                             "전성분 항목은 찾았지만 "
-                            "내용이 비어 있습니다. "
-                            f"{debug_info.as_message()}"
+                            "내용이 비어 있습니다."
                         ),
                     )
 
@@ -407,7 +456,9 @@ class OliveYoungIngredientExtractor:
                 ) from error
 
         finally:
-            # 탭을 포함하는 브라우저 세션을 정리한다.
+            if page is not None:
+                with suppress(Exception):
+                    page.close()
             context.close()
 
     def _dismiss_blocking_layers(

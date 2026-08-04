@@ -14,13 +14,17 @@ from playwright.sync_api import (
     Locator,
     Page,
     TimeoutError as PlaywrightTimeoutError,
-    sync_playwright,
 )
 
 from app.products.models import ProductCandidate
 from app.products.providers.base import (
     ProductSearchNetworkError,
     ProductSearchParsingError,
+)
+from app.products.playwright_runtime import (
+    CollectionDeadline,
+    CollectionDeadlineExceeded,
+    run_browser_operation,
 )
 
 
@@ -70,9 +74,8 @@ class OliveYoungProductSearchProvider:
     실제 Chrome으로 올리브영 통합검색 페이지를 열어 상품 후보를
     만드는 Provider.
 
-    올리브영은 일반 HTTP 클라이언트와 headless Chrome 요청을
-    Cloudflare 확인 페이지로 전환한다. 전성분 추출기와 동일하게
-    사용자가 보는 Chrome 세션(headless=False)을 기본으로 사용한다.
+    headless 여부는 환경별 smoke test 결과로 결정한다. 운영 요청은
+    headed 모드로 자동 fallback하지 않는다.
     """
 
     provider_name = "oliveyoung"
@@ -81,9 +84,13 @@ class OliveYoungProductSearchProvider:
         self,
         headless: bool = False,
         timeout_ms: int = 60_000,
+        deadline_ms: int = 90_000,
+        max_attempts: int = 2,
     ) -> None:
         self.headless = headless
         self.timeout_ms = timeout_ms
+        self.deadline_ms = deadline_ms
+        self.max_attempts = max_attempts
 
     @staticmethod
     def build_search_url(query: str) -> str:
@@ -112,86 +119,68 @@ class OliveYoungProductSearchProvider:
         normalized_limit = max(1, min(limit, 10))
         fetched_at = datetime.now(timezone.utc)
 
-        try:
-            with sync_playwright() as playwright:
-                browser = playwright.chromium.launch(
-                    channel="chrome",
-                    headless=self.headless,
+        def collect(
+            page: Page,
+            deadline: CollectionDeadline,
+        ) -> list[ProductCandidate]:
+            page.goto(
+                search_url,
+                wait_until="domcontentloaded",
+                timeout=deadline.remaining_ms(self.timeout_ms),
+            )
+
+            cards = page.locator(PRODUCT_CARD_SELECTOR)
+            self._wait_for_search_result(
+                cards=cards,
+                page=page,
+                deadline=deadline,
+            )
+
+            if cards.count() == 0:
+                return []
+
+            products: list[ProductCandidate] = []
+            for index in range(cards.count()):
+                if len(products) >= normalized_limit:
+                    break
+                card_html = cards.nth(index).evaluate(
+                    "element => element.outerHTML"
                 )
-
-                try:
-                    context = browser.new_context(
-                        locale="ko-KR",
-                        viewport={
-                            "width": 1440,
-                            "height": 1000,
-                        },
+                products.append(
+                    self.parse_product_card(
+                        card_html=card_html,
+                        rank=index + 1,
+                        search_query=normalized_query,
+                        fetched_at=fetched_at,
                     )
+                )
+            return products
 
-                    try:
-                        page = context.new_page()
-                        page.goto(
-                            search_url,
-                            wait_until="domcontentloaded",
-                            timeout=self.timeout_ms,
-                        )
-
-                        cards = page.locator(
-                            PRODUCT_CARD_SELECTOR
-                        )
-                        self._wait_for_search_result(
-                            cards=cards,
-                            page=page,
-                        )
-
-                        if cards.count() == 0:
-                            return []
-
-                        products: list[
-                            ProductCandidate
-                        ] = []
-
-                        for index in range(cards.count()):
-                            if len(products) >= normalized_limit:
-                                break
-
-                            card_html = cards.nth(
-                                index
-                            ).evaluate(
-                                "element => element.outerHTML"
-                            )
-
-                            products.append(
-                                self.parse_product_card(
-                                    card_html=card_html,
-                                    rank=index + 1,
-                                    search_query=(
-                                        normalized_query
-                                    ),
-                                    fetched_at=fetched_at,
-                                )
-                            )
-
-                        return products
-                    finally:
-                        context.close()
-                finally:
-                    browser.close()
+        try:
+            return run_browser_operation(
+                collect,
+                headless=self.headless,
+                deadline_ms=self.deadline_ms,
+                max_attempts=self.max_attempts,
+                viewport={"width": 1440, "height": 1000},
+            )
 
         except (
             ProductSearchParsingError,
             ValueError,
         ):
             raise
-        except PlaywrightTimeoutError as error:
+        except (
+            PlaywrightTimeoutError,
+            CollectionDeadlineExceeded,
+        ) as error:
             raise ProductSearchNetworkError(
                 "올리브영 상품 검색 요청 시간이 "
                 "초과되었습니다."
             ) from error
         except PlaywrightError as error:
             raise ProductSearchNetworkError(
-                "올리브영 상품 검색용 Chrome을 "
-                f"실행하지 못했습니다: {error}"
+                "올리브영 상품 검색용 브라우저를 실행하지 못했습니다."
             ) from error
         except OSError as error:
             raise ProductSearchNetworkError(
@@ -203,21 +192,23 @@ class OliveYoungProductSearchProvider:
         self,
         cards: Locator,
         page: Page,
+        deadline: CollectionDeadline,
     ) -> None:
-        deadline = (
-            time.monotonic()
-            + self.timeout_ms / 1000
-        )
         last_body_text = ""
+        stage_expires_at = min(
+            deadline.expires_at,
+            time.monotonic() + self.timeout_ms / 1_000,
+        )
 
-        while time.monotonic() < deadline:
+        while time.monotonic() < stage_expires_at:
+            remaining_ms = deadline.remaining_ms(self.timeout_ms)
             if cards.count() > 0:
                 return
 
             try:
                 last_body_text = (
                     page.locator("body").inner_text(
-                        timeout=2_000
+                        timeout=min(2_000, remaining_ms)
                     )
                 )
             except PlaywrightTimeoutError:
@@ -229,14 +220,11 @@ class OliveYoungProductSearchProvider:
             page.wait_for_timeout(250)
 
         if (
-            "Enable JavaScript and cookies"
-            in last_body_text
-            or "잠시만 기다려 주세요"
-            in last_body_text
+            "Enable JavaScript and cookies" in last_body_text
+            or "잠시만 기다려 주세요" in last_body_text
         ):
             raise ProductSearchNetworkError(
-                "올리브영의 브라우저 확인 화면을 "
-                "통과하지 못했습니다."
+                "올리브영의 브라우저 확인 화면을 통과하지 못했습니다."
             )
 
         raise ProductSearchParsingError(

@@ -61,6 +61,7 @@ def build_product_allergens(
                 leave_on_threshold=(
                     allergen.leave_on_threshold
                 ),
+                source_id=allergen.source_id,
                 source_authority=(
                     allergen.source_authority
                 ),

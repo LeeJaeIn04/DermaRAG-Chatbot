@@ -1,10 +1,11 @@
 import { Check, ChevronRight, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   SkinConcern,
   SkinProfile,
   SkinType,
 } from "../../types/chat";
+import { hasSkinProfileData } from "../../utils/skin";
 
 const skinTypes: Array<{ label: string; value: SkinType }> = [
   { label: "중성", value: "normal" },
@@ -47,16 +48,20 @@ const areas = ["얼굴 전체", "눈가", "입가", "볼", "이마", "몸", "직
 
 interface SkinProfilePanelProps {
   value: SkinProfile;
+  analysisMode?: boolean;
   onClose: () => void;
   onSave: (profile: SkinProfile) => void;
 }
 
 export function SkinProfilePanel({
   value,
+  analysisMode = false,
   onClose,
   onSave,
 }: SkinProfilePanelProps) {
   const [draft, setDraft] = useState(value);
+  const saveStartedRef = useRef(false);
+  const canSave = !analysisMode || hasSkinProfileData(draft);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -87,8 +92,14 @@ export function SkinProfilePanel({
         <header className="profile-header">
           <div>
             <span className="step-label">SKIN PROFILE</span>
-            <h2 id="profile-title">피부 정보 설정</h2>
-            <p>선택 사항이며, 맞춤 분석에만 사용해요.</p>
+            <h2 id="profile-title">
+              {analysisMode ? "맞춤 분석을 위한 피부 정보" : "피부 정보 설정"}
+            </h2>
+            <p>
+              {analysisMode
+                ? "한 가지 이상 입력하면 이번 분석에 반영해요."
+                : "선택 사항이며, 맞춤 분석에만 사용해요."}
+            </p>
           </div>
           <button type="button" onClick={onClose} aria-label="피부 정보 닫기">
             <X className="size-5" />
@@ -290,13 +301,15 @@ export function SkinProfilePanel({
           <button
             type="button"
             className="profile-save"
+            disabled={!canSave}
             onClick={() => {
+              if (!canSave || saveStartedRef.current) return;
+              saveStartedRef.current = true;
               onSave(draft);
-              onClose();
             }}
           >
             <SlidersHorizontal className="size-4" />
-            분석에 반영하기
+            {analysisMode ? "저장하고 분석하기" : "분석에 반영하기"}
           </button>
         </footer>
       </aside>

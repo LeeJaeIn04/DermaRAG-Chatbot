@@ -1,7 +1,9 @@
 from typing import Any
 
-from langsmith import Client
-
+from app.langsmith_client import (
+    create_langsmith_client,
+    run_with_langsmith_auth_help,
+)
 from app.retriever import search_documents
 
 
@@ -126,7 +128,7 @@ def retrieval_case_correct(
 
 
 def main() -> None:
-    client = Client()
+    client = create_langsmith_client()
 
     results = client.evaluate(
         retrieval_target,
@@ -151,4 +153,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    run_with_langsmith_auth_help(main)

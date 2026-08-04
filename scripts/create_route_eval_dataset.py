@@ -1,11 +1,14 @@
-from langsmith import Client
+from app.langsmith_client import (
+    create_langsmith_client,
+    run_with_langsmith_auth_help,
+)
 
 
 DATASET_NAME = "DermaRAG Route Baseline v1"
 
 
 def main() -> None:
-    client = Client()
+    client = create_langsmith_client()
 
     existing_datasets = list(
         client.list_datasets(
@@ -228,4 +231,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    run_with_langsmith_auth_help(main)

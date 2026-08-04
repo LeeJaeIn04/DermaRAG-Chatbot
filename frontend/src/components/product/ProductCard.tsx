@@ -101,7 +101,7 @@ export function ProductCard({
                 <Check className="size-4" /> 선택됨
               </>
             ) : (
-              "분석하기"
+              "이 상품 선택"
             )}
           </button>
         </div>

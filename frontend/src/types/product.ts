@@ -55,8 +55,7 @@ export interface ProductSelectionResponse {
   option_status:
     | "ready"
     | "not_applicable"
-    | "mapping_failed"
-    | "extraction_failed";
+    | "unavailable";
   option_error: string | null;
 }
 
@@ -125,11 +124,15 @@ export interface ProductRegulationSource {
   product_scope: string | null;
   use_conditions: string | null;
   warning_text: string | null;
+  source_id: string;
   source_authority: string;
   source_document: string;
   notice_number: string;
+  notice_label: string;
   notice_date: string;
   source_section: string;
+  source_table: number | null;
+  source_row: number;
 }
 
 export interface ProductFragranceAllergenSource {
@@ -152,6 +155,7 @@ export interface ProductFragranceAllergenSource {
   evidence_scope: string;
   rinse_off_threshold: string | null;
   leave_on_threshold: string | null;
+  source_id: string;
   source_authority: string;
   source_document: string;
   source_document_version: string | null;

@@ -27,6 +27,15 @@ OUTPUT_PATH = (
     / "mfds_prohibited_ingredients.jsonl"
 )
 
+SOURCE_METADATA_PATH = (
+    BASE_DIR
+    / "data"
+    / "regulations"
+    / "mfds"
+    / "raw"
+    / "source_metadata.json"
+)
+
 
 def local_name(element: etree._Element) -> str:
     """
@@ -47,6 +56,39 @@ def clean_text(value: str | None) -> str:
         return ""
 
     return " ".join(value.split())
+
+
+def load_source_metadata() -> dict[str, object]:
+    """
+    규제 원문의 공통 출처 메타데이터를 읽는다.
+    """
+    with SOURCE_METADATA_PATH.open(
+        encoding="utf-8",
+    ) as file:
+        metadata = json.load(file)
+
+    required_fields = [
+        "source_id",
+        "document_title",
+        "notice_number",
+        "notice_label",
+        "notice_date",
+    ]
+
+    missing_fields = [
+        field
+        for field in required_fields
+        if not metadata.get(field)
+    ]
+
+    if missing_fields:
+        raise ValueError(
+            "출처 메타데이터 필드가 "
+            "누락되었습니다: "
+            + ", ".join(missing_fields)
+        )
+
+    return metadata
 
 
 def extract_cell_text(cell: etree._Element) -> str:
@@ -137,6 +179,7 @@ def extract_rows(
 
 def normalize_rows(
     rows: list[list[str]],
+    source_metadata: dict[str, object],
 ) -> list[dict[str, object]]:
     """
     표의 병합 셀을 고려해 사용금지 원료 데이터를 구조화한다.
@@ -216,16 +259,22 @@ def normalize_rows(
                 "화장품에 사용할 수 없음"
             ),
             "warning_text": None,
+            "source_id": source_metadata[
+                "source_id"
+            ],
             "source_authority": "MFDS",
-            "source_document": (
-                "화장품 안전기준 등에 관한 규정"
-            ),
-            "notice_number": "2026-19",
-            "notice_label": (
-                "식품의약품안전처 고시 "
-                "제2026-19호"
-            ),
-            "notice_date": "2026-03-18",
+            "source_document": source_metadata[
+                "document_title"
+            ],
+            "notice_number": source_metadata[
+                "notice_number"
+            ],
+            "notice_label": source_metadata[
+                "notice_label"
+            ],
+            "notice_date": source_metadata[
+                "notice_date"
+            ],
             "source_section": "별표 1",
             "source_row": source_row,
         }
@@ -267,8 +316,13 @@ def main() -> None:
             f"입력 파일이 없습니다: {INPUT_PATH}"
         )
 
+    source_metadata = load_source_metadata()
+
     rows = extract_rows(INPUT_PATH)
-    records = normalize_rows(rows)
+    records = normalize_rows(
+        rows,
+        source_metadata,
+    )
 
     write_jsonl(
         records=records,

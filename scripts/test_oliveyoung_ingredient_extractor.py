@@ -17,7 +17,7 @@ def test_rejects_non_oliveyoung_url() -> None:
     """
 
     extractor = OliveYoungIngredientExtractor(
-        headless=True,
+        headless=False,
     )
 
     result = extractor.extract(

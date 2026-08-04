@@ -8,9 +8,8 @@ import {
 import ReactMarkdown from "react-markdown";
 import type { ProductAnalysisResponse } from "../../types/product";
 import { ActionTips } from "../analysis/ActionTips";
-import { AllergenSection } from "../analysis/AllergenSection";
 import { IngredientSources } from "../analysis/IngredientSources";
-import { RegulationSection } from "../analysis/RegulationSection";
+import { JudgmentEvidenceSection } from "../analysis/JudgmentEvidenceSection";
 import { SkinCompatibilitySection } from "../analysis/SkinCompatibilitySection";
 
 interface ProductAnalysisResultProps {
@@ -88,13 +87,11 @@ export function ProductAnalysisResult({
       <SkinCompatibilitySection
         notices={analysis.skin_compatibility || []}
       />
-      <RegulationSection
-        count={analysis.regulation_count}
-        regulations={analysis.regulations}
-      />
-      <AllergenSection
-        count={analysis.allergen_count}
-        allergens={analysis.allergens}
+      <JudgmentEvidenceSection
+        regulationCount={analysis.regulation_count}
+        regulations={analysis.regulations || []}
+        allergenCount={analysis.allergen_count}
+        allergens={analysis.allergens || []}
       />
       <IngredientSources
         sources={analysis.sources}

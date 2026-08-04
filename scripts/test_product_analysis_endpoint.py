@@ -124,6 +124,21 @@ def test_analyze_product_passes_structured_ingredients(
     assert len(rag_request.ingredients) == response.ingredient_count
 
 
+def test_product_analysis_request_accepts_profile_without_skin_type() -> None:
+    request = main.ProductAnalysisRequest(
+        product=make_product(),
+        question="민감 피부 기준으로 확인해 주세요.",
+        skin_profile=UserSkinProfile(
+            sensitive=True,
+            concerns=["redness"],
+        ),
+    )
+
+    assert request.skin_profile is not None
+    assert request.skin_profile.skin_type is None
+    assert request.skin_profile.sensitive is True
+
+
 def test_analyze_product_uses_only_selected_option_ingredients(
     monkeypatch,
 ) -> None:

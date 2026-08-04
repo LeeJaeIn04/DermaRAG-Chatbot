@@ -1,11 +1,54 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from app.products.models import (
     ProductCandidate,
     ProductIngredientResult,
 )
+from app.products.related_models import RelatedProductMatch
+
+
+@dataclass(frozen=True)
+class CachedProductOption:
+    option_id: str
+    option_name: str
+    source_option_id: str | None = None
+    raw_option_name: str | None = None
+    normalized_name: str | None = None
+    image_url: str | None = None
+    source_option_names: tuple[str, ...] = ()
+    source_option_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class CachedProductPreparation:
+    status: str
+    options: tuple[CachedProductOption, ...] = ()
+
+
+@dataclass(frozen=True)
+class CachedProductSearch:
+    products: tuple[ProductCandidate, ...]
+    searched_at: datetime
+    expires_at: datetime
+
+
+@dataclass(frozen=True)
+class ProductCollectionQueueItem:
+    product: ProductCandidate
+    status: str
+    attempt_count: int
+    last_attempt_at: datetime | None
+    next_retry_at: datetime | None
+    attempt_started: bool = False
+
+
+@dataclass(frozen=True)
+class ProductCollectionEntry:
+    result: ProductIngredientResult
+    option_id: str = ""
+    option_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -101,6 +144,41 @@ class ProductIngredientRepository(Protocol):
 
         ...
 
+    def get_cached_preparation(
+        self,
+        source: str,
+        external_product_id: str,
+        now: datetime,
+    ) -> CachedProductPreparation | None:
+        """완전하고 유효한 상품 선택 캐시를 반환한다."""
+        ...
+
+    def mark_collection_complete(
+        self,
+        product: ProductCandidate,
+        *,
+        status: str,
+        option_ids: list[str],
+        options: list[dict[str, object]],
+        expires_at: datetime,
+        parser_version: str,
+    ) -> None:
+        """모든 옵션 저장이 끝난 뒤 완전성 상태를 기록한다."""
+        ...
+
+    def save_collection(
+        self,
+        product: ProductCandidate,
+        *,
+        entries: Sequence[ProductCollectionEntry],
+        status: str,
+        options: list[dict[str, object]],
+        expires_at: datetime,
+        parser_version: str,
+    ) -> None:
+        """상품의 전체 옵션과 완료 상태를 한 transaction으로 저장한다."""
+        ...
+
     def find_products_by_ingredient(
         self,
         ingredient_name: str,
@@ -110,4 +188,100 @@ class ProductIngredientRepository(Protocol):
         특정 성분을 포함한 저장 상품을 조회한다.
         """
 
+        ...
+
+    def find_related_products_by_ingredients(
+        self,
+        normalized_ingredient_names: Sequence[str],
+        *,
+        exclude_product_id: int | None = None,
+        exclude_source: str | None = None,
+        exclude_external_product_id: str | None = None,
+        category: str | None = None,
+        category_path: str | None = None,
+        limit: int = 5,
+        include_legacy: bool = False,
+    ) -> list[RelatedProductMatch]:
+        """완전 수집 상품에서 exact 성분 매칭 결과를 조회한다."""
+        ...
+
+    def get_product_candidate(
+        self,
+        source: str,
+        external_product_id: str,
+    ) -> ProductCandidate | None:
+        """저장된 상품 기본 정보를 조회한다."""
+        ...
+
+    def search_complete_products(
+        self,
+        query: str,
+        *,
+        now: datetime,
+        limit: int = 5,
+    ) -> list[ProductCandidate]:
+        """캐시 전용 검색을 위해 완전 수집 상품만 조회한다."""
+        ...
+
+    def search_products_by_text(
+        self,
+        query: str,
+        *,
+        now: datetime,
+        limit: int = 10,
+    ) -> list[ProductCandidate]:
+        """저장된 상품 기본 정보를 이름/브랜드로 검색한다."""
+        ...
+
+    def get_cached_search(
+        self,
+        normalized_query: str,
+        *,
+        now: datetime,
+    ) -> CachedProductSearch | None:
+        """유효한 검색어 캐시를 조회한다. 빈 결과 캐시도 구분한다."""
+        ...
+
+    def save_search_results(
+        self,
+        normalized_query: str,
+        products: Sequence[ProductCandidate],
+        *,
+        searched_at: datetime,
+        expires_at: datetime,
+    ) -> CachedProductSearch:
+        """상품 기본 정보와 검색어-상품 관계만 저장한다."""
+        ...
+
+    def start_collection_attempt(
+        self,
+        product: ProductCandidate,
+        *,
+        now: datetime,
+        force: bool = False,
+        collecting_lease_timeout_seconds: int = 90,
+    ) -> ProductCollectionQueueItem:
+        """claim 가능한 항목 또는 stale collecting을 원자적으로 claim한다."""
+        ...
+
+    def finish_collection_attempt(
+        self,
+        product: ProductCandidate,
+        *,
+        success: bool,
+        now: datetime,
+        retry_base_seconds: int,
+        retry_max_seconds: int,
+    ) -> ProductCollectionQueueItem:
+        """상세 수집을 complete 또는 backoff가 있는 failed로 종료한다."""
+        ...
+
+    def list_collection_queue(
+        self,
+        *,
+        now: datetime,
+        limit: int,
+        collecting_lease_timeout_seconds: int = 90,
+    ) -> list[ProductCollectionQueueItem]:
+        """worker가 처리할 pending/failed/stale collecting을 조회한다."""
         ...

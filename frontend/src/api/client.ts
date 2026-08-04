@@ -1,9 +1,12 @@
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8001"
 ).replace(/\/+$/, "");
 
 interface ErrorPayload {
-  detail?: string | Array<{ msg?: string }>;
+  detail?:
+    | string
+    | Array<{ msg?: string }>
+    | { code?: string; message?: string };
   message?: string;
 }
 
@@ -22,6 +25,13 @@ export class ApiError extends Error {
 function formatErrorDetail(payload: ErrorPayload | null, fallback: string) {
   if (!payload) return fallback;
   if (typeof payload.detail === "string") return payload.detail;
+  if (
+    payload.detail &&
+    !Array.isArray(payload.detail) &&
+    typeof payload.detail.message === "string"
+  ) {
+    return payload.detail.message;
+  }
   if (Array.isArray(payload.detail)) {
     return payload.detail
       .map((item) => item.msg)
@@ -31,12 +41,17 @@ function formatErrorDetail(payload: ErrorPayload | null, fallback: string) {
   return payload.message || fallback;
 }
 
+function buildApiUrl(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(buildApiUrl(path), {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -46,12 +61,17 @@ export async function apiRequest<T>(
 
     if (!response.ok) {
       let payload: ErrorPayload | null = null;
+      let fallbackDetail = response.statusText;
       try {
         payload = (await response.json()) as ErrorPayload;
       } catch {
-        // 서버가 JSON 오류를 반환하지 않는 경우 상태 문구를 사용한다.
+        try {
+          fallbackDetail = await response.text();
+        } catch {
+          fallbackDetail = response.statusText;
+        }
       }
-      const detail = formatErrorDetail(payload, response.statusText);
+      const detail = formatErrorDetail(payload, fallbackDetail);
       throw new ApiError(
         "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.",
         response.status,

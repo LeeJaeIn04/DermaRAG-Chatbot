@@ -21,6 +21,14 @@ class ProductOption(BaseModel):
     image_url: str | None = None
     mapping_status: OptionMappingStatus = "unmatched"
     mapping_confidence: float = 0.0
+    source_option_names: list[str] = Field(
+        default_factory=list,
+        exclude=True,
+    )
+    source_option_ids: list[str] = Field(
+        default_factory=list,
+        exclude=True,
+    )
 
 
 class ProductIngredientRawDocument(BaseModel):
@@ -48,6 +56,7 @@ class OptionIngredientSection(BaseModel):
     mapping_status: OptionMappingStatus
     mapping_method: str
     mapping_confidence: float
+    duplicate_header_count: int = 0
 
 
 OptionCollectionStatus = Literal[
@@ -65,6 +74,22 @@ class ProductOptionExtractionResult(BaseModel):
     error_message: str | None = None
 
 
+class OptionMappingDiagnostics(BaseModel):
+    """옵션 매핑의 내부 진단용 집계값."""
+
+    collected_option_count: int = 0
+    matched_count: int = 0
+    unmatched_count: int = 0
+    ambiguous_count: int = 0
+    unsupported_count: int = 0
+    collected_raw_option_count: int = 0
+    canonical_option_count: int = 0
+    merged_duplicate_count: int = 0
+    matched_canonical_count: int = 0
+    unmatched_canonical_count: int = 0
+    duplicate_header_count: int = 0
+
+
 class ProductOptionPreparationResult(BaseModel):
     requires_option_selection: bool
     options: list[ProductOption] = Field(default_factory=list)
@@ -76,3 +101,7 @@ class ProductOptionPreparationResult(BaseModel):
         "extraction_failed",
     ]
     error_message: str | None = None
+    mapping_diagnostics: OptionMappingDiagnostics | None = Field(
+        default=None,
+        exclude=True,
+    )

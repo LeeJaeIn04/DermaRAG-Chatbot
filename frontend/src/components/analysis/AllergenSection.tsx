@@ -6,18 +6,29 @@ interface AllergenSectionProps {
   allergens: ProductFragranceAllergenSource[];
 }
 
+const matchTypeLabels: Record<
+  ProductFragranceAllergenSource["match_type"],
+  string
+> = {
+  ingredient_kor_name: "한글 성분명",
+  ingredient_eng_name: "영문 성분명",
+  inci_name: "INCI 명칭",
+  alias: "동의어",
+  cas_no: "CAS 번호",
+};
+
 export function AllergenSection({
   count,
   allergens,
 }: AllergenSectionProps) {
   return (
-    <section className="analysis-section">
-      <div className="section-heading">
-        <span className="section-icon sand">
+    <section className="evidence-group">
+      <div className="evidence-group-heading">
+        <span className="evidence-group-icon sand">
           <Sparkles className="size-5" />
         </span>
         <div>
-          <h3>향료 알레르기 표시 대상</h3>
+          <h4>향료 알레르기 표시 대상</h4>
           <p>법적 표시 대상 목록과 전성분을 대조한 결과예요.</p>
         </div>
         <span className="count-pill">{count}건</span>
@@ -55,6 +66,10 @@ export function AllergenSection({
                 </span>
               </div>
               <dl className="result-field-grid">
+                <div className="result-field">
+                  <dt>판정 근거</dt>
+                  <dd>{matchTypeLabels[item.match_type]} 일치</dd>
+                </div>
                 {item.cas_numbers.length > 0 && (
                   <div className="result-field">
                     <dt>CAS 번호</dt>
@@ -64,6 +79,14 @@ export function AllergenSection({
                 <div className="result-field">
                   <dt>법적 상태</dt>
                   <dd>{item.legal_status}</dd>
+                </div>
+                <div className="result-field">
+                  <dt>적용 범위</dt>
+                  <dd>
+                    {[item.jurisdiction, item.evidence_scope]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </dd>
                 </div>
                 {item.rinse_off_threshold && (
                   <div className="result-field">
@@ -79,8 +102,16 @@ export function AllergenSection({
                 )}
               </dl>
               <p className="source-line">
-                {item.source_document}
+                <strong>출처</strong>
+                {` · ${item.source_authority} · ${item.source_document}`}
+                {item.source_document_version
+                  ? ` · ${item.source_document_version}`
+                  : ""}
+                {item.source_document_date
+                  ? ` (${item.source_document_date})`
+                  : ""}
                 {item.source_section ? ` · ${item.source_section}` : ""}
+                {item.source_page ? ` · ${item.source_page}쪽` : ""}
               </p>
             </article>
           ))}

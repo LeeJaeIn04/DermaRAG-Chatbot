@@ -4,6 +4,7 @@ from app.schemas import (
     ChatRequest,
     UserSkinProfile,
 )
+from app.skin_compatibility import build_active_skin_profiles
 from app.skin_rule_schemas import (
     SkinCompatibilityNotice,
 )
@@ -175,6 +176,31 @@ def test_evaluation_is_skipped_without_profile_or_ingredients(
             "ingredient_names": [],
         }
     ) == {"skin_compatibility": []}
+
+
+def test_partial_profile_without_skin_type_is_supported() -> None:
+    profile = UserSkinProfile(
+        sensitive=True,
+        concerns=["redness"],
+    )
+
+    assert profile.skin_type is None
+    assert nodes.evaluate_skin_compatibility_node(
+        {
+            "request": ChatRequest(
+                question="민감 피부 성분을 확인해 주세요.",
+                skin_profile=profile,
+                ingredients=["향료"],
+            ),
+            "ingredient_names": ["향료"],
+        }
+    )["skin_compatibility"]
+
+
+def test_partial_barrier_profile_activates_barrier_rules() -> None:
+    assert build_active_skin_profiles(
+        UserSkinProfile(barrier_impaired=True)
+    ) == {"barrier_impaired"}
 
 
 def test_chat_response_includes_skin_compatibility(

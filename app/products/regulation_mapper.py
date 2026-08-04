@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 from app.products.schemas import (
     ProductRegulationSource,
 )
@@ -50,6 +49,7 @@ def build_product_regulations(
                 warning_text=(
                     regulation.warning_text
                 ),
+                source_id=regulation.source_id,
                 source_authority=(
                     regulation.source_authority
                 ),
@@ -59,11 +59,20 @@ def build_product_regulations(
                 notice_number=(
                     regulation.notice_number
                 ),
+                notice_label=(
+                    regulation.notice_label
+                ),
                 notice_date=(
                     regulation.notice_date
                 ),
                 source_section=(
                     regulation.source_section
+                ),
+                source_table=(
+                    regulation.source_table
+                ),
+                source_row=(
+                    regulation.source_row
                 ),
             )
         )

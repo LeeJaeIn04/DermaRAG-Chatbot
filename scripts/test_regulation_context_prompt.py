@@ -122,3 +122,27 @@ def test_invoke_derma_rag_defaults_api_endpoint_for_chat(
 
     assert result["answer"] == "테스트 답변"
     assert captured_configs[0]["metadata"]["api_endpoint"] == "/chat"
+
+
+def test_safety_warning_prompt_prioritizes_immediate_actions() -> None:
+    request = ChatRequest(
+        question=(
+            "새 화장품을 바른 뒤 얼굴이 붓고 "
+            "숨쉬기가 어려워요."
+        ),
+        ingredients=["향료"],
+    )
+
+    prompt = build_agent_prompt(
+        request=request,
+        route="safety_warning",
+        warnings=[
+            "위험 증상 가능성이 있으므로 안전 안내를 우선합니다."
+        ],
+    )
+
+    assert "사용을 즉시 중단" in prompt
+    assert "119 또는 응급실" in prompt
+    assert "성분 후보 분석보다 안전 안내를 우선" in prompt
+    assert "답변 첫 부분에서" in prompt
+    assert "의학적 진단을 확정하지" in prompt

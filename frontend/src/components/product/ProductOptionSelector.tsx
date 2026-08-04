@@ -84,7 +84,7 @@ export function ProductOptionSelector({
         }}
       >
         <Sparkles className="size-4" />
-        이 옵션 분석하기
+        이 옵션 선택
       </button>
     </section>
   );

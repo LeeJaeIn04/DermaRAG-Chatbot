@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from threading import Event, Thread
 
 from app.products.ingredient_cache_service import (
     ProductIngredientCacheService,
@@ -6,10 +7,18 @@ from app.products.ingredient_cache_service import (
 from app.products.models import ProductCandidate
 from app.products.repositories import (
     CachedProductIngredients,
+    CachedProductOption,
+    CachedProductPreparation,
+    ProductCollectionEntry,
+)
+from app.products.option_parser import (
+    canonicalize_product_options,
+    make_product_option,
 )
 from app.products.models import (
     ProductIngredientResult,
 )
+from app.products.errors import ProductDataUnavailableError
 
 
 FIXED_NOW = datetime(
@@ -422,6 +431,78 @@ def test_separates_cache_by_option_id() -> None:
     )
 
 
+def test_collection_storage_keeps_canonical_source_options_internal() -> None:
+    class CollectionRepository(FakeRepository):
+        def save_collection(self, product, **kwargs):
+            self.saved_arguments = {"product": product, **kwargs}
+
+    repository = CollectionRepository()
+    service = ProductIngredientCacheService(
+        repository=repository,
+        extractor=FakeExtractor(make_success_result()),
+        clock=lambda: FIXED_NOW,
+    )
+    canonical = canonicalize_product_options(
+        [
+            make_product_option(
+                "[기획] 23호 누카다미아", source_option_id="plan"
+            ),
+            make_product_option(
+                "단품/23 누카다미아", source_option_id="single"
+            ),
+        ]
+    )[0]
+    service.store_collection(
+        make_product(),
+        entries=[
+            ProductCollectionEntry(
+                result=make_success_result(),
+                option_id=canonical.internal_option_key,
+                option_name=canonical.option_name,
+            )
+        ],
+        status="ready",
+        options=[canonical],
+        parser_version="test-canonical",
+    )
+
+    assert repository.saved_arguments is not None
+    stored_option = repository.saved_arguments["options"][0]
+    assert stored_option["option_name"] == "23 누카다미아"
+    assert stored_option["source_option_names"] == [
+        "[기획] 23호 누카다미아",
+        "단품/23 누카다미아",
+    ]
+    assert stored_option["source_option_ids"] == ["plan", "single"]
+
+
+def test_legacy_duplicate_option_cache_is_not_reused_as_complete() -> None:
+    class LegacyPreparationRepository(FakeRepository):
+        def get_cached_preparation(self, **kwargs):
+            return CachedProductPreparation(
+                status="ready",
+                options=(
+                    CachedProductOption(
+                        option_id="legacy-plan",
+                        option_name="[기획] 23호 누카다미아",
+                        raw_option_name="[기획] 23호 누카다미아",
+                    ),
+                    CachedProductOption(
+                        option_id="legacy-single",
+                        option_name="단품/23 누카다미아",
+                        raw_option_name="단품/23 누카다미아",
+                    ),
+                ),
+            )
+
+    service = ProductIngredientCacheService(
+        repository=LegacyPreparationRepository(),
+        extractor=FakeExtractor(make_success_result()),
+        clock=lambda: FIXED_NOW,
+    )
+    assert service.get_cached_preparation(make_product()) is None
+
+
 def test_selected_option_reads_only_its_cache() -> None:
     repository = FakeRepository(
         cached=make_cached_result(
@@ -487,3 +568,75 @@ def test_rejects_invalid_ttl() -> None:
         raise AssertionError(
             "ValueError가 발생해야 합니다."
         )
+
+
+def test_concurrent_misses_run_extractor_once() -> None:
+    repository = FakeRepository()
+    started = Event()
+    release = Event()
+
+    class BlockingExtractor(FakeExtractor):
+        def extract(self, product_id: str, product_url: str):
+            self.call_count += 1
+            started.set()
+            assert release.wait(timeout=2)
+            return self.result
+
+    extractor = BlockingExtractor(make_success_result())
+    service = ProductIngredientCacheService(
+        repository=repository,
+        extractor=extractor,
+        clock=lambda: FIXED_NOW,
+    )
+    results = []
+
+    def resolve() -> None:
+        results.append(service.get_or_extract(make_product()))
+
+    first = Thread(target=resolve)
+    second = Thread(target=resolve)
+    first.start()
+    assert started.wait(timeout=2)
+    second.start()
+    release.set()
+    first.join(timeout=2)
+    second.join(timeout=2)
+
+    assert len(results) == 2
+    assert extractor.call_count == 1
+    assert sum(result.extraction_performed for result in results) == 1
+
+
+def test_cache_only_miss_never_runs_extractor() -> None:
+    repository = FakeRepository()
+    extractor = FakeExtractor(make_success_result())
+    service = ProductIngredientCacheService(
+        repository=repository,
+        extractor=extractor,
+        cache_only_mode=True,
+        live_collection_enabled=False,
+        clock=lambda: FIXED_NOW,
+    )
+    try:
+        service.get_or_extract(make_product())
+    except ProductDataUnavailableError as error:
+        assert error.code == "PRODUCT_NOT_PREFETCHED"
+    else:
+        raise AssertionError("ProductDataUnavailableError가 필요합니다.")
+    assert extractor.call_count == 0
+
+
+def test_cache_only_hit_still_returns_without_extractor() -> None:
+    repository = FakeRepository(
+        cached=make_cached_result(FIXED_NOW + timedelta(days=1))
+    )
+    extractor = FakeExtractor(make_success_result())
+    service = ProductIngredientCacheService(
+        repository=repository,
+        extractor=extractor,
+        cache_only_mode=True,
+        live_collection_enabled=False,
+        clock=lambda: FIXED_NOW,
+    )
+    assert service.get_or_extract(make_product()).cache_hit is True
+    assert extractor.call_count == 0

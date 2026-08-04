@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import time
+import logging
 from datetime import datetime, timezone
 
 from playwright.sync_api import (
     Locator,
     Page,
     TimeoutError as PlaywrightTimeoutError,
-    sync_playwright,
 )
 
 from app.products.ingredient_extractors.oliveyoung_browser import (
@@ -21,6 +22,14 @@ from app.products.option_parser import (
     PARSER_VERSION,
     make_product_option,
 )
+from app.products.playwright_runtime import (
+    CollectionDeadline,
+    CollectionDeadlineExceeded,
+    run_browser_operation,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 class OliveYoungProductOptionExtractor:
@@ -32,16 +41,21 @@ class OliveYoungProductOptionExtractor:
         *,
         headless: bool = False,
         timeout_ms: int = 60_000,
+        deadline_ms: int = 90_000,
+        max_attempts: int = 2,
     ) -> None:
         self.ingredient_extractor = ingredient_extractor
         self.headless = headless
         self.timeout_ms = timeout_ms
+        self.deadline_ms = deadline_ms
+        self.max_attempts = max_attempts
 
     def extract(
         self,
         product_id: str,
         product_url: str,
     ) -> ProductOptionExtractionResult:
+        started_at = time.monotonic()
         ingredient_result = self.ingredient_extractor.extract(
             product_id=product_id,
             product_url=product_url,
@@ -62,46 +76,63 @@ class OliveYoungProductOptionExtractor:
             fetched_at=datetime.now(timezone.utc),
             parser_version=PARSER_VERSION,
         )
+        remaining_deadline_ms = int(
+            self.deadline_ms
+            - (time.monotonic() - started_at) * 1_000
+        )
+        if remaining_deadline_ms <= 0:
+            return ProductOptionExtractionResult(
+                status="failed",
+                raw_document=raw_document,
+                error_message="상품 수집 전체 제한 시간이 초과되었습니다.",
+            )
+
+        def collect_options(page: Page, deadline: CollectionDeadline):
+            stage_timeout = deadline.remaining_ms(self.timeout_ms)
+            page.goto(
+                product_url,
+                wait_until="domcontentloaded",
+                timeout=stage_timeout,
+            )
+            self.ingredient_extractor._dismiss_blocking_layers(page)
+            return self._collect_review_options(
+                page,
+                timeout_ms=deadline.remaining_ms(stage_timeout),
+            )
 
         try:
-            with sync_playwright() as playwright:
-                browser = playwright.chromium.launch(
-                    channel="chrome",
-                    headless=self.headless,
-                )
-                try:
-                    context = browser.new_context(locale="ko-KR")
-                    try:
-                        page = context.new_page()
-                        page.goto(
-                            product_url,
-                            wait_until="domcontentloaded",
-                            timeout=self.timeout_ms,
-                        )
-                        self.ingredient_extractor._dismiss_blocking_layers(
-                            page
-                        )
-                        options = self._collect_review_options(page)
-                    finally:
-                        context.close()
-                finally:
-                    browser.close()
-        except PlaywrightTimeoutError as error:
+            options = run_browser_operation(
+                collect_options,
+                headless=self.headless,
+                deadline_ms=remaining_deadline_ms,
+                max_attempts=self.max_attempts,
+            )
+        except (PlaywrightTimeoutError, CollectionDeadlineExceeded) as error:
+            logger.warning(
+                "Olive Young option collection timed out (%s, headless=%s): %s",
+                product_id,
+                self.headless,
+                error,
+            )
             return ProductOptionExtractionResult(
                 status="failed",
                 raw_document=raw_document,
                 error_message=(
-                    "올리브영 리뷰 옵션을 제한 시간 안에 "
-                    f"수집하지 못했습니다: {error}"
+                    "올리브영 리뷰 옵션을 제한 시간 안에 수집하지 못했습니다."
                 ),
             )
         except Exception as error:
+            logger.warning(
+                "Olive Young option collection failed (%s, headless=%s): %s",
+                product_id,
+                self.headless,
+                error,
+            )
             return ProductOptionExtractionResult(
                 status="failed",
                 raw_document=raw_document,
                 error_message=(
-                    "올리브영 리뷰 옵션 DOM을 처리하지 "
-                    f"못했습니다: {error}"
+                    "올리브영 리뷰 옵션 DOM을 처리하지 못했습니다."
                 ),
             )
 
@@ -130,11 +161,13 @@ class OliveYoungProductOptionExtractor:
     def _collect_review_options(
         self,
         page: Page,
+        timeout_ms: int | None = None,
     ) -> list[ProductOption] | None:
-        review_button = self._find_review_button(page)
+        effective_timeout = timeout_ms or self.timeout_ms
+        review_button = self._find_review_button(page, effective_timeout)
 
         review_button.scroll_into_view_if_needed()
-        review_button.click(timeout=self.timeout_ms)
+        review_button.click(timeout=effective_timeout)
 
         review_area = page.locator(
             "oy-review-option-filter"
@@ -142,7 +175,7 @@ class OliveYoungProductOptionExtractor:
         try:
             review_area.wait_for(
                 state="attached",
-                timeout=min(self.timeout_ms, 15_000),
+                timeout=min(effective_timeout, 15_000),
             )
         except PlaywrightTimeoutError:
             # 옵션이 없는 상품은 리뷰 자체는 표시되지만
@@ -164,7 +197,7 @@ class OliveYoungProductOptionExtractor:
         try:
             option_filter_button.wait_for(
                 state="visible",
-                timeout=min(self.timeout_ms, 15_000),
+                timeout=min(effective_timeout, 15_000),
             )
         except PlaywrightTimeoutError:
             review_option_text = page.locator(
@@ -176,14 +209,14 @@ class OliveYoungProductOptionExtractor:
                 )
             return None
 
-        option_filter_button.click(timeout=self.timeout_ms)
+        option_filter_button.click(timeout=effective_timeout)
 
         sheet = page.locator(
             "oy-review-goods-option-sheet"
         ).first
         sheet.wait_for(
             state="attached",
-            timeout=self.timeout_ms,
+            timeout=effective_timeout,
         )
 
         option_rows = sheet.locator(
@@ -191,11 +224,10 @@ class OliveYoungProductOptionExtractor:
         )
         option_rows.first.wait_for(
             state="attached",
-            timeout=self.timeout_ms,
+            timeout=effective_timeout,
         )
 
         collected: list[ProductOption] = []
-        seen: set[str] = set()
         for index in range(option_rows.count()):
             row = option_rows.nth(index)
             option_name = row.locator(
@@ -211,9 +243,6 @@ class OliveYoungProductOptionExtractor:
                 source_option_id=source_option_id,
                 image_url=image_url,
             )
-            if option.normalized_name in seen:
-                continue
-            seen.add(option.normalized_name)
             collected.append(option)
 
         return collected
@@ -221,13 +250,16 @@ class OliveYoungProductOptionExtractor:
     def _find_review_button(
         self,
         page: Page,
+        timeout_ms: int | None = None,
     ) -> Locator:
         review_area_selector = (
             "button[class*='ReviewArea_btn-review']"
         )
         tab_clicked = False
 
-        for _ in range(30):
+        effective_timeout = timeout_ms or self.timeout_ms
+        max_attempts = max(1, min(30, effective_timeout // 500))
+        for _ in range(max_attempts):
             candidates = page.locator(review_area_selector)
             for index in range(candidates.count()):
                 candidate = candidates.nth(index)
@@ -242,7 +274,7 @@ class OliveYoungProductOptionExtractor:
                     review_tab.count() > 0
                     and review_tab.is_visible()
                 ):
-                    review_tab.click(timeout=5_000)
+                    review_tab.click(timeout=min(5_000, effective_timeout))
                     tab_clicked = True
 
             page.evaluate(

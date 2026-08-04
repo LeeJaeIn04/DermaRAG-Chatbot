@@ -46,6 +46,10 @@ from app.products.service import (
 from app.products.option_service import (
     ProductOptionService,
 )
+from app.products.errors import (
+    ProductCollectionRetryLaterError,
+    ProductDataUnavailableError,
+)
 from app.products.regulation_mapper import (
     build_product_regulations,
     build_regulation_context,
@@ -77,7 +81,6 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -88,14 +91,6 @@ app.add_middleware(
 #
 # 이미 테이블이 있으면 다시 만들지 않는다.
 create_database_tables()
-
-
-# 상품 검색과 상품 선택을 담당한다.
-product_search_service = ProductSearchService(
-    provider=OliveYoungProductSearchProvider(
-        headless=False,
-    ),
-)
 
 
 # 상품과 전성분의 DB 조회·저장을 담당한다.
@@ -110,22 +105,33 @@ ingredient_repository = (
 )
 
 
+# 검색어 캐시 HIT는 DB에서 반환하고, MISS일 때만 설정에 따라
+# 상품 검색 provider를 한 번 실행해 기본 정보와 검색 관계를 저장한다.
+product_search_service = ProductSearchService(
+    provider=OliveYoungProductSearchProvider(
+        headless=settings.product_playwright_headless,
+        timeout_ms=settings.product_playwright_timeout_ms,
+        deadline_ms=settings.product_playwright_deadline_ms,
+        max_attempts=settings.product_playwright_max_attempts,
+    ),
+    repository=ingredient_repository,
+    search_cache_ttl_minutes=settings.product_search_cache_ttl_minutes,
+    cache_only_mode=settings.product_cache_only_mode,
+    live_collection_enabled=settings.product_live_collection_enabled,
+)
+
+
 # 올리브영 상품 페이지에서
 # 실제 전성분을 가져오는 추출기다.
 #
-# headless=False:
-# 올리브영은 headless Chrome 세션을 Cloudflare 봇 차단으로
-# 막아 "잠시만 기다려 주세요" 안내 페이지만 반환한다(실제
-# 상품 페이지에 도달하지 못해 상품정보 제공고시 영역을
-# 영원히 찾지 못하고 타임아웃한다). CAPTCHA 우회나 stealth
-# 플러그인 같은 회피 기법은 쓰지 않기로 했으므로, 실제
-# 사용자가 보는 화면을 그대로 띄우는 headless=False가
-# 현재 유일하게 검증된 실행 방식이다. 따라서 이 서버를
-# 띄우는 환경에는 화면 출력이 가능해야 한다(원격 서버라면
-# Xvfb 같은 가상 디스플레이가 필요하다).
+# 운영에서는 smoke test 확인 후 PRODUCT_PLAYWRIGHT_HEADLESS=true로
+# 실행한다. 실패 시 자동으로 headed 모드로 전환하지 않는다.
 ingredient_extractor = (
     OliveYoungIngredientExtractor(
-        headless=False,
+        headless=settings.product_playwright_headless,
+        timeout_ms=settings.product_playwright_timeout_ms,
+        deadline_ms=settings.product_playwright_deadline_ms,
+        max_attempts=settings.product_playwright_max_attempts,
     )
 )
 
@@ -138,20 +144,33 @@ ingredient_cache_service = (
     ProductIngredientCacheService(
         repository=ingredient_repository,
         extractor=ingredient_extractor,
-        ttl_days=90,
+        ttl_days=settings.product_ingredient_ttl_days,
+        cache_only_mode=settings.product_cache_only_mode,
+        live_collection_enabled=settings.product_live_collection_enabled,
     )
 )
 
 product_option_extractor = (
     OliveYoungProductOptionExtractor(
         ingredient_extractor=ingredient_extractor,
-        headless=False,
+        headless=settings.product_playwright_headless,
+        timeout_ms=settings.product_playwright_timeout_ms,
+        deadline_ms=settings.product_playwright_deadline_ms,
+        max_attempts=settings.product_playwright_max_attempts,
     )
 )
 
 product_option_service = ProductOptionService(
     extractor=product_option_extractor,
     cache_service=ingredient_cache_service,
+    retry_base_seconds=settings.product_collection_retry_base_seconds,
+    retry_max_seconds=settings.product_collection_retry_max_seconds,
+)
+
+
+PRODUCT_OPTION_UNAVAILABLE_MESSAGE = (
+    "현재 이 상품의 옵션별 전성분 정보를 정확히 확인할 수 없습니다. "
+    "다른 상품을 선택해 주세요."
 )
 
 
@@ -262,24 +281,38 @@ def select_product(
             ),
         )
 
-    next_action = get_next_action(
-        selected_product.category
-    )
-
     try:
         option_preparation = (
             product_option_service.prepare_product(
                 selected_product
             )
         )
+    except (
+        ProductDataUnavailableError,
+        ProductCollectionRetryLaterError,
+    ) as error:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": error.code, "message": error.public_message},
+        ) from error
     except Exception as error:
         raise HTTPException(
             status_code=502,
             detail=(
-                "상품 옵션과 전성분을 준비하지 "
-                f"못했습니다: {error}"
+                "상품 옵션과 전성분을 준비하지 못했습니다."
             ),
         ) from error
+
+    if option_preparation.can_analyze:
+        next_action = get_next_action(selected_product.category)
+        public_option_status = option_preparation.status
+        public_options = option_preparation.options
+        public_option_error = None
+    else:
+        next_action = "product_data_unavailable"
+        public_option_status = "unavailable"
+        public_options = []
+        public_option_error = PRODUCT_OPTION_UNAVAILABLE_MESSAGE
 
     return ProductSelectionResponse(
         selected_product=selected_product,
@@ -287,10 +320,10 @@ def select_product(
         requires_option_selection=(
             option_preparation.requires_option_selection
         ),
-        options=option_preparation.options,
+        options=public_options,
         can_analyze=option_preparation.can_analyze,
-        option_status=option_preparation.status,
-        option_error=option_preparation.error_message,
+        option_status=public_option_status,
+        option_error=public_option_error,
     )
 
 
@@ -332,6 +365,11 @@ def extract_product_ingredients(
                 )
             )
 
+    except ProductDataUnavailableError as error:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": error.code, "message": error.public_message},
+        ) from error
     except ValueError as error:
         # 잘못된 상품 정보나 옵션 값 등
         # 요청 데이터에서 발생한 오류
@@ -345,10 +383,7 @@ def extract_product_ingredients(
         # 서버 내부 처리에서 발생한 예외
         raise HTTPException(
             status_code=500,
-            detail=(
-                "전성분 처리 중 서버 오류가 "
-                f"발생했습니다: {error}"
-            ),
+            detail="전성분 처리 중 서버 오류가 발생했습니다.",
         ) from error
 
     if not resolution.result.extraction_success:
@@ -427,6 +462,11 @@ def analyze_product(
                 )
             )
 
+    except ProductDataUnavailableError as error:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": error.code, "message": error.public_message},
+        ) from error
     except ValueError as error:
         raise HTTPException(
             status_code=400,
@@ -436,10 +476,7 @@ def analyze_product(
     except Exception as error:
         raise HTTPException(
             status_code=500,
-            detail=(
-                "상품 전성분 처리 중 오류가 "
-                f"발생했습니다: {error}"
-            ),
+            detail="상품 전성분 처리 중 오류가 발생했습니다.",
         ) from error
 
     # 2. 전성분 확보에 실패한 경우에는

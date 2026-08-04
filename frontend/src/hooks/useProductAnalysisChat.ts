@@ -8,7 +8,6 @@ import {
 import type {
   ChatFlowState,
   ChatMessage,
-  SkinConcern,
   SkinProfile,
 } from "../types/chat";
 import type {
@@ -16,12 +15,28 @@ import type {
   ProductCandidate,
   ProductOption,
 } from "../types/product";
+import { removeAnalysisMessages } from "../utils/chat";
+import {
+  acquireAnalysisLock,
+  assembleProductAnalysisRequest,
+  createAnalysisAttempt,
+  createPendingAnalysisTarget,
+  getBackFlowState,
+  releaseAnalysisLock,
+} from "../utils/analysisFlow";
+import type {
+  AnalysisAttempt,
+  PendingAnalysisTarget,
+} from "../utils/analysisFlow";
 import {
   createProductSearchQuery,
   getProductAnalysisEligibility,
 } from "../utils/products";
-import { toUserSkinProfile } from "../utils/skin";
-import { removeAnalysisMessages } from "../utils/chat";
+import {
+  buildSkinAnalysisFields,
+  getSkinPreferenceDecision,
+  hasSkinProfileData,
+} from "../utils/skin";
 
 const initialAssistantMessage: ChatMessage = {
   id: "welcome",
@@ -36,60 +51,16 @@ function createId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
-const concernLabels: Record<SkinConcern, string> = {
-  dehydration: "수분 부족",
-  acne_prone: "여드름·트러블",
-  clogged_pores: "모공 막힘",
-  excess_sebum: "과도한 피지",
-  tightness: "당김",
-  flaking: "각질",
-  redness: "홍조",
-  stinging: "따가움",
-  itching: "가려움",
-  barrier_impaired: "피부 장벽 약화",
-};
-
-function profileToRoutine(profile: SkinProfile) {
-  const details: string[] = [];
-
-  if (profile.currentRoutine.trim()) {
-    details.push(`함께 사용하는 제품: ${profile.currentRoutine.trim()}`);
-  }
-  if (profile.concerns.length || profile.customSymptom.trim()) {
-    details.push(
-      `현재 증상: ${[
-        ...profile.concerns.map((concern) => concernLabels[concern]),
-        profile.customSymptom.trim(),
-      ]
-        .filter(Boolean)
-        .join(", ")}`,
-    );
-  }
-  if (profile.symptomTiming) {
-    details.push(`증상이 나타나는 시점: ${profile.symptomTiming}`);
-  }
-  if (profile.knownAllergies.trim()) {
-    details.push(
-      `알레르기 또는 민감 성분 이력: ${profile.knownAllergies.trim()}`,
-    );
-  }
-  const area = profile.productArea === "직접 입력"
-    ? profile.customArea.trim()
-    : profile.productArea;
-  if (area) details.push(`제품 사용 부위: ${area}`);
-
-  return details.length ? details.join("\n") : null;
-}
-
 export function buildProductAnalysisRequest(
   product: ProductCandidate,
   question: string,
-  profile: SkinProfile,
+  profile: SkinProfile | null,
   option?: {
     optionId?: string;
     optionName?: string | null;
     sourceOptionId?: string | null;
   },
+  settings: { useSkinProfile?: boolean } = {},
 ): ProductAnalysisRequest {
   const eligibility = getProductAnalysisEligibility(product);
   if (!eligibility.canAnalyze) {
@@ -100,21 +71,19 @@ export function buildProductAnalysisRequest(
     );
   }
 
-  return {
-    // 검색 결과의 ProductCandidate 참조와 모든 필드를 그대로 유지한다.
-    product,
-    question,
-    skin_type: profile.skinType || null,
-    skin_profile: toUserSkinProfile(profile),
-    current_routine: profileToRoutine(profile),
-    option_id: option?.optionId || "",
-    internal_option_key: option?.optionId || null,
-    option_name: option?.optionName || null,
-    source_option_id: option?.sourceOptionId || null,
-  };
+  const skinFields = buildSkinAnalysisFields(
+    profile,
+    settings.useSkinProfile !== false,
+  );
+
+  // 검색 결과의 ProductCandidate 참조와 모든 필드를 그대로 유지한다.
+  return assembleProductAnalysisRequest(product, question, skinFields, option);
 }
 
-export function useProductAnalysisChat(profile: SkinProfile) {
+export function useProductAnalysisChat(
+  profile: SkinProfile,
+  onRequestSkinProfile?: () => void,
+) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     initialAssistantMessage,
   ]);
@@ -124,7 +93,14 @@ export function useProductAnalysisChat(profile: SkinProfile) {
     useState<ProductCandidate | null>(null);
   const [selectedOption, setSelectedOption] =
     useState<ProductOption | null>(null);
+  const [pendingAnalysisTarget, setPendingAnalysisTarget] =
+    useState<PendingAnalysisTarget | null>(null);
+  const [activeSkinPreferenceMessageId, setActiveSkinPreferenceMessageId] =
+    useState<string | null>(null);
+  const [retryMessageId, setRetryMessageId] = useState<string | null>(null);
   const busyRef = useRef(false);
+  const skinDecisionRef = useRef(false);
+  const retryAttemptRef = useRef<AnalysisAttempt | null>(null);
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setMessages((current) => [...current, message]);
@@ -144,11 +120,13 @@ export function useProductAnalysisChat(profile: SkinProfile) {
               0,
               error instanceof Error ? error.message : String(error),
             );
+      const errorMessageId = createId("error");
 
       setFlowState("error");
+      setRetryMessageId(errorMessageId);
       clearAnalysisMessages();
       appendMessage({
-        id: createId("error"),
+        id: errorMessageId,
         role: "assistant",
         kind: "error",
         content: apiError.message,
@@ -159,13 +137,21 @@ export function useProductAnalysisChat(profile: SkinProfile) {
     [appendMessage, clearAnalysisMessages],
   );
 
+  const resetPendingAnalysis = useCallback(() => {
+    setPendingAnalysisTarget(null);
+    setActiveSkinPreferenceMessageId(null);
+    setRetryMessageId(null);
+    skinDecisionRef.current = false;
+    retryAttemptRef.current = null;
+  }, []);
+
   const submitQuestion = useCallback(
     async (question: string) => {
       const normalizedQuestion = question.trim();
-      if (!normalizedQuestion || busyRef.current) return;
+      if (!normalizedQuestion || !acquireAnalysisLock(busyRef)) return;
 
-      busyRef.current = true;
       clearAnalysisMessages();
+      resetPendingAnalysis();
       setCurrentQuestion(normalizedQuestion);
       setSelectedProduct(null);
       setSelectedOption(null);
@@ -214,24 +200,76 @@ export function useProductAnalysisChat(profile: SkinProfile) {
       } catch (error) {
         reportError(error);
       } finally {
-        busyRef.current = false;
+        releaseAnalysisLock(busyRef);
       }
     },
-    [appendMessage, clearAnalysisMessages, reportError],
+    [appendMessage, clearAnalysisMessages, reportError, resetPendingAnalysis],
+  );
+
+  const prepareAnalysis = useCallback(
+    (product: ProductCandidate, option: ProductOption | null = null) => {
+      const target = createPendingAnalysisTarget(product, option);
+      const promptMessageId = createId("skin-preference");
+
+      setPendingAnalysisTarget(target);
+      setActiveSkinPreferenceMessageId(promptMessageId);
+      setRetryMessageId(null);
+      skinDecisionRef.current = false;
+      retryAttemptRef.current = null;
+      appendMessage({
+        id: promptMessageId,
+        role: "assistant",
+        kind: "skin-preference",
+        content: "피부 정보도 반영해서 분석할까요?",
+        productName: `${product.brand_name ? `${product.brand_name} ` : ""}${product.product_name}`,
+        optionName: option?.option_name || null,
+        createdAt: new Date(),
+      });
+      setFlowState("waiting_for_skin_preference");
+    },
+    [appendMessage],
   );
 
   const runAnalysis = useCallback(
-    async (product: ProductCandidate, option?: ProductOption) => {
+    async (
+      attempt: AnalysisAttempt,
+      { announceChoice = true }: { announceChoice?: boolean } = {},
+    ) => {
+      if (!acquireAnalysisLock(busyRef)) return false;
+
+      const stableAttempt = createAnalysisAttempt(
+        attempt.target,
+        attempt.useSkinProfile,
+        attempt.profile,
+      );
+      retryAttemptRef.current = stableAttempt;
+      setRetryMessageId(null);
+      setActiveSkinPreferenceMessageId(null);
+      setFlowState("fetching_ingredients");
+
+      if (announceChoice) {
+        appendMessage({
+          id: createId("skin-choice"),
+          role: "user",
+          kind: "text",
+          content: attempt.useSkinProfile
+            ? "저장한 피부 정보를 반영해서 분석해 주세요."
+            : "피부 정보 없이 기본 분석을 진행해 주세요.",
+          createdAt: new Date(),
+        });
+      }
+
       let analysisTimer: number | undefined;
       try {
         analysisTimer = window.setTimeout(() => {
           setFlowState("analyzing_product");
         }, 900);
 
+        const { product, option } = stableAttempt.target;
         const analysisRequest = buildProductAnalysisRequest(
           product,
           currentQuestion,
-          profile,
+          stableAttempt.profile,
           option
             ? {
                 optionId: option.internal_option_key,
@@ -239,6 +277,7 @@ export function useProductAnalysisChat(profile: SkinProfile) {
                 sourceOptionId: option.source_option_id,
               }
             : undefined,
+          { useSkinProfile: stableAttempt.useSkinProfile },
         );
 
         if (import.meta.env.DEV) {
@@ -262,30 +301,33 @@ export function useProductAnalysisChat(profile: SkinProfile) {
           analysis,
           createdAt: new Date(),
         });
+        setPendingAnalysisTarget(null);
+        retryAttemptRef.current = null;
+        skinDecisionRef.current = false;
+        return true;
       } catch (error) {
         if (analysisTimer) window.clearTimeout(analysisTimer);
         reportError(error);
+        return false;
+      } finally {
+        releaseAnalysisLock(busyRef);
       }
     },
-    [
-      appendMessage,
-      currentQuestion,
-      profile,
-      reportError,
-    ],
+    [appendMessage, currentQuestion, reportError],
   );
 
   const chooseProduct = useCallback(
-    async (
-      product: ProductCandidate,
-      candidates: ProductCandidate[],
-    ) => {
-      if (busyRef.current || flowState !== "waiting_for_product_selection") {
+    async (product: ProductCandidate, candidates: ProductCandidate[]) => {
+      if (
+        flowState !== "waiting_for_product_selection" ||
+        !acquireAnalysisLock(busyRef)
+      ) {
         return;
       }
 
       const eligibility = getProductAnalysisEligibility(product);
       if (!eligibility.canAnalyze) {
+        releaseAnalysisLock(busyRef);
         appendMessage({
           id: createId("unavailable"),
           role: "assistant",
@@ -298,8 +340,8 @@ export function useProductAnalysisChat(profile: SkinProfile) {
         return;
       }
 
-      busyRef.current = true;
       clearAnalysisMessages();
+      resetPendingAnalysis();
       // 검색 응답의 ProductCandidate 객체를 재구성하지 않고 그대로 보존한다.
       setSelectedProduct(product);
       setSelectedOption(null);
@@ -314,7 +356,7 @@ export function useProductAnalysisChat(profile: SkinProfile) {
         id: createId("selection"),
         role: "user",
         kind: "text",
-        content: `${product.brand_name ? `${product.brand_name} ` : ""}${product.product_name}을(를) 분석해 주세요.`,
+        content: `${product.brand_name ? `${product.brand_name} ` : ""}${product.product_name}을(를) 선택했어요.`,
         createdAt: new Date(),
       });
       setFlowState("fetching_ingredients");
@@ -333,7 +375,7 @@ export function useProductAnalysisChat(profile: SkinProfile) {
             kind: "text",
             content:
               selection.option_error ||
-              "이 상품의 옵션별 전성분을 정확히 구분하지 못했습니다. 현재는 옵션별 분석을 진행할 수 없습니다.",
+              "현재 이 상품의 옵션별 전성분 정보를 정확히 확인할 수 없습니다. 다른 상품을 선택해 주세요.",
             createdAt: new Date(),
           });
           return;
@@ -354,66 +396,168 @@ export function useProductAnalysisChat(profile: SkinProfile) {
           return;
         }
 
-        await runAnalysis(product);
+        prepareAnalysis(product);
       } catch (error) {
         reportError(error);
       } finally {
-        busyRef.current = false;
+        releaseAnalysisLock(busyRef);
       }
     },
     [
       appendMessage,
       clearAnalysisMessages,
       flowState,
+      prepareAnalysis,
       reportError,
-      runAnalysis,
+      resetPendingAnalysis,
     ],
   );
 
   const chooseOption = useCallback(
-    async (product: ProductCandidate, option: ProductOption) => {
+    (product: ProductCandidate, option: ProductOption) => {
       if (
-        busyRef.current ||
         flowState !== "waiting_for_option_selection" ||
-        option.mapping_status !== "matched"
+        option.mapping_status !== "matched" ||
+        !acquireAnalysisLock(busyRef)
       ) {
         return;
       }
 
-      busyRef.current = true;
-      clearAnalysisMessages();
-      setSelectedOption(option);
-      setFlowState("fetching_ingredients");
-      appendMessage({
-        id: createId("option-selection"),
-        role: "user",
-        kind: "text",
-        content: `${option.option_name} 옵션을 분석해 주세요.`,
-        createdAt: new Date(),
-      });
-
-      if (import.meta.env.DEV) {
-        console.info("[DermaRAG] selected option", {
-          product_id: product.product_id,
-          internal_option_key: option.internal_option_key,
-          source_option_id: option.source_option_id,
-          option_name: option.option_name,
-        });
-      }
-
       try {
-        await runAnalysis(product, option);
+        clearAnalysisMessages();
+        resetPendingAnalysis();
+        setSelectedOption(option);
+        appendMessage({
+          id: createId("option-selection"),
+          role: "user",
+          kind: "text",
+          content: `${option.option_name} 옵션을 선택했어요.`,
+          createdAt: new Date(),
+        });
+
+        if (import.meta.env.DEV) {
+          console.info("[DermaRAG] selected option", {
+            product_id: product.product_id,
+            internal_option_key: option.internal_option_key,
+            source_option_id: option.source_option_id,
+            option_name: option.option_name,
+          });
+        }
+
+        prepareAnalysis(product, option);
       } finally {
-        busyRef.current = false;
+        releaseAnalysisLock(busyRef);
       }
     },
     [
       appendMessage,
       clearAnalysisMessages,
       flowState,
-      runAnalysis,
+      prepareAnalysis,
+      resetPendingAnalysis,
     ],
   );
+
+  const useSkinProfileForPendingAnalysis = useCallback(() => {
+    if (
+      flowState !== "waiting_for_skin_preference" ||
+      !pendingAnalysisTarget ||
+      busyRef.current ||
+      skinDecisionRef.current
+    ) {
+      return;
+    }
+
+    skinDecisionRef.current = true;
+    if (getSkinPreferenceDecision(profile) === "collect_profile") {
+      setFlowState("waiting_for_skin_profile");
+      onRequestSkinProfile?.();
+      return;
+    }
+
+    void runAnalysis({
+      target: pendingAnalysisTarget,
+      useSkinProfile: true,
+      profile,
+    });
+  }, [
+    flowState,
+    onRequestSkinProfile,
+    pendingAnalysisTarget,
+    profile,
+    runAnalysis,
+  ]);
+
+  const skipSkinProfileForPendingAnalysis = useCallback(() => {
+    if (
+      flowState !== "waiting_for_skin_preference" ||
+      !pendingAnalysisTarget ||
+      busyRef.current ||
+      skinDecisionRef.current
+    ) {
+      return;
+    }
+
+    skinDecisionRef.current = true;
+    void runAnalysis({
+      target: pendingAnalysisTarget,
+      useSkinProfile: false,
+      profile: null,
+    });
+  }, [flowState, pendingAnalysisTarget, runAnalysis]);
+
+  const completeSkinProfileForPendingAnalysis = useCallback(
+    (savedProfile: SkinProfile) => {
+      if (
+        flowState !== "waiting_for_skin_profile" ||
+        !pendingAnalysisTarget ||
+        busyRef.current ||
+        !hasSkinProfileData(savedProfile)
+      ) {
+        return;
+      }
+
+      void runAnalysis({
+        target: pendingAnalysisTarget,
+        useSkinProfile: true,
+        profile: savedProfile,
+      });
+    },
+    [flowState, pendingAnalysisTarget, runAnalysis],
+  );
+
+  const cancelSkinProfileEntry = useCallback(() => {
+    if (flowState !== "waiting_for_skin_profile" || busyRef.current) return;
+    skinDecisionRef.current = false;
+    setFlowState("waiting_for_skin_preference");
+  }, [flowState]);
+
+  const goBackFromSkinPreference = useCallback(() => {
+    if (
+      flowState !== "waiting_for_skin_preference" ||
+      !pendingAnalysisTarget ||
+      busyRef.current ||
+      skinDecisionRef.current
+    ) {
+      return;
+    }
+
+    const backState = getBackFlowState(pendingAnalysisTarget);
+    if (pendingAnalysisTarget.option) {
+      setSelectedOption(null);
+    } else {
+      setSelectedProduct(null);
+    }
+    resetPendingAnalysis();
+    setFlowState(backState);
+  }, [flowState, pendingAnalysisTarget, resetPendingAnalysis]);
+
+  const retryAnalysis = useCallback(() => {
+    if (flowState !== "error" || !retryAttemptRef.current || busyRef.current) {
+      return;
+    }
+    void runAnalysis(retryAttemptRef.current, { announceChoice: false });
+  }, [flowState, runAnalysis]);
 
   const startNewChat = useCallback(() => {
     if (busyRef.current) return;
@@ -427,7 +571,8 @@ export function useProductAnalysisChat(profile: SkinProfile) {
     setCurrentQuestion("");
     setSelectedProduct(null);
     setSelectedOption(null);
-  }, []);
+    resetPendingAnalysis();
+  }, [resetPendingAnalysis]);
 
   const recentAnalyses = useMemo(
     () =>
@@ -451,10 +596,21 @@ export function useProductAnalysisChat(profile: SkinProfile) {
     flowState,
     selectedProduct,
     selectedOption,
+    pendingAnalysisTarget,
+    activeSkinPreferenceMessageId,
+    retryMessageId,
+    canRetryAnalysis:
+      flowState === "error" && pendingAnalysisTarget !== null,
     recentAnalyses,
     submitQuestion,
     chooseProduct,
     chooseOption,
+    useSkinProfileForPendingAnalysis,
+    skipSkinProfileForPendingAnalysis,
+    completeSkinProfileForPendingAnalysis,
+    cancelSkinProfileEntry,
+    goBackFromSkinPreference,
+    retryAnalysis,
     startNewChat,
     isBusy:
       flowState === "classifying_intent" ||

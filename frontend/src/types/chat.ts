@@ -10,6 +10,8 @@ export type ChatFlowState =
   | "searching_products"
   | "waiting_for_product_selection"
   | "waiting_for_option_selection"
+  | "waiting_for_skin_preference"
+  | "waiting_for_skin_profile"
   | "fetching_ingredients"
   | "analyzing_product"
   | "completed"
@@ -41,7 +43,7 @@ export interface PreviousReaction {
 }
 
 export interface UserSkinProfile {
-  skin_type: SkinType;
+  skin_type: SkinType | null;
   sensitive: boolean;
   dehydration: boolean;
   barrier_impaired: boolean;
@@ -88,6 +90,15 @@ export type ChatMessage =
       content: string;
       searchQuery: string;
       products: ProductCandidate[];
+      createdAt: Date;
+    }
+  | {
+      id: string;
+      role: "assistant";
+      kind: "skin-preference";
+      content: string;
+      productName: string;
+      optionName: string | null;
       createdAt: Date;
     }
   | {

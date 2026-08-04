@@ -56,6 +56,8 @@ class ProductRecord(Base):
             "external_product_id",
             name="uq_products_source_external_id",
         ),
+        Index("ix_products_category", "category"),
+        Index("ix_products_category_path", "category_path"),
     )
 
     # DB 내부에서 사용하는 숫자 ID
@@ -87,6 +89,15 @@ class ProductRecord(Base):
     product_name: Mapped[str] = mapped_column(
         String(500),
         nullable=False,
+    )
+
+    # 검색·비교 전용 값이다. 사용자에게 표시하는 product_name은
+    # provider에서 받은 원문을 그대로 보존한다.
+    normalized_product_name: Mapped[str] = mapped_column(
+        String(500),
+        nullable=False,
+        default="",
+        index=True,
     )
 
     # skincare, color_makeup, other, unknown
@@ -133,6 +144,128 @@ class ProductRecord(Base):
         cascade="all, delete-orphan",
     )
 
+    collection_state: Mapped[ProductCollectionState | None] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
+    search_results: Mapped[list[ProductSearchResultRecord]] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+
+    collection_queue: Mapped[ProductCollectionQueueRecord | None] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
+
+class ProductSearchQueryRecord(Base):
+    __tablename__ = "product_search_queries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    normalized_query: Mapped[str] = mapped_column(
+        String(500), nullable=False, unique=True
+    )
+    searched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False, index=True
+    )
+    results: Mapped[list[ProductSearchResultRecord]] = relationship(
+        back_populates="query",
+        cascade="all, delete-orphan",
+        order_by="ProductSearchResultRecord.rank",
+    )
+
+
+class ProductSearchResultRecord(Base):
+    __tablename__ = "product_search_results"
+    __table_args__ = (
+        UniqueConstraint(
+            "query_id", "product_id", name="uq_search_results_query_product"
+        ),
+        UniqueConstraint(
+            "query_id", "rank", name="uq_search_results_query_rank"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    query_id: Mapped[int] = mapped_column(
+        ForeignKey("product_search_queries.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    query: Mapped[ProductSearchQueryRecord] = relationship(
+        back_populates="results"
+    )
+    product: Mapped[ProductRecord] = relationship(
+        back_populates="search_results"
+    )
+
+
+class ProductCollectionQueueRecord(Base):
+    __tablename__ = "product_collection_queue"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    status: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="pending", index=True
+    )
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
+    next_retry_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=False), nullable=True, index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False, default=utc_now, onupdate=utc_now
+    )
+    product: Mapped[ProductRecord] = relationship(
+        back_populates="collection_queue"
+    )
+
+
+class ProductCollectionState(Base):
+    """상품 선택 단계에서 옵션/전성분 수집 완료 여부를 기록한다."""
+
+    __tablename__ = "product_collection_states"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    status: Mapped[str] = mapped_column(String(30), nullable=False)
+    option_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    parser_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    options_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    collected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False, default=utc_now
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False
+    )
+
+    product: Mapped[ProductRecord] = relationship(
+        back_populates="collection_state"
+    )
+
 
 class ProductIngredientRecord(Base):
     """
@@ -155,6 +288,10 @@ class ProductIngredientRecord(Base):
                 "uq_product_ingredient_records_"
                 "product_option"
             ),
+        ),
+        Index(
+            "ix_product_ingredient_records_product_id",
+            "product_id",
         ),
     )
 

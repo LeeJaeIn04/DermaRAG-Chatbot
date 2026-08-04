@@ -89,6 +89,9 @@ def test_build_prompt_states_threshold_judgement_rule() -> None:
 
     assert "0.01%" in prompt
     assert "0.001%" in prompt
+    assert "독성·안전 기준이 아니라 법적 표시 기준" in prompt
+    assert "[필수 근거 전달]" in prompt
+    assert "표시 기준 수치를 답변에 그대로 포함" in prompt
 
 
 def test_build_prompt_includes_both_regulation_and_allergen_context() -> None:

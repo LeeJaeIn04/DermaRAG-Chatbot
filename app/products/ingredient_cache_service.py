@@ -10,8 +10,28 @@ from app.products.models import (
     ProductIngredientResult,
 )
 from app.products.repositories import (
+    ProductCollectionEntry,
     ProductIngredientRepository,
 )
+from app.products.concurrency import KeyedLockPool
+from app.products.option_models import (
+    ProductOption,
+    ProductOptionPreparationResult,
+)
+from app.products.option_parser import (
+    normalize_option_label,
+    normalize_option_mapping_key,
+)
+from app.products.errors import ProductDataUnavailableError
+
+
+def _option_storage_metadata(option: ProductOption) -> dict[str, object]:
+    """API 비노출 원본 추적값을 포함한 DB 저장용 옵션 metadata."""
+
+    metadata = option.model_dump(mode="json")
+    metadata["source_option_names"] = list(option.source_option_names)
+    metadata["source_option_ids"] = list(option.source_option_ids)
+    return metadata
 
 
 def utc_now() -> datetime:
@@ -70,6 +90,8 @@ class ProductIngredientCacheService:
         extractor: IngredientExtractor,
         ttl_days: int = 90,
         clock: Callable[[], datetime] | None = None,
+        cache_only_mode: bool = False,
+        live_collection_enabled: bool = True,
     ) -> None:
         if ttl_days <= 0:
             raise ValueError(
@@ -80,6 +102,16 @@ class ProductIngredientCacheService:
         self.extractor = extractor
         self.ttl_days = ttl_days
         self.clock = clock or utc_now
+        self.cache_only_mode = cache_only_mode
+        self.live_collection_enabled = live_collection_enabled
+        self._extraction_locks = KeyedLockPool()
+
+    def ensure_live_collection_allowed(self) -> None:
+        if self.cache_only_mode or not self.live_collection_enabled:
+            raise ProductDataUnavailableError()
+
+    def current_time(self) -> datetime:
+        return self._normalize_datetime(self.clock())
 
     def get_or_extract(
         self,
@@ -130,18 +162,80 @@ class ProductIngredientCacheService:
                 extraction_performed=False,
             )
 
-        # 캐시가 없거나 만료된 경우에만
-        # Playwright 기반 extractor를 실행한다.
-        extracted_result = self.extractor.extract(
-            product_id=product.product_id,
-            product_url=product.product_url,
+        self.ensure_live_collection_allowed()
+
+        collection_key = (
+            f"{product.source}:{product.product_id}:{normalized_option_id}"
         )
+        with self._extraction_locks.acquire(collection_key):
+            # 대기 중 다른 요청이 저장했을 수 있으므로 브라우저 실행 전
+            # 캐시를 다시 확인한다(single-flight double check).
+            cached_after_wait = self.repository.get_cached_ingredients(
+                source=product.source,
+                external_product_id=product.product_id,
+                option_id=normalized_option_id,
+            )
+            if (
+                cached_after_wait is not None
+                and not cached_after_wait.is_expired(now)
+            ):
+                return ProductIngredientResolution(
+                    result=cached_after_wait.to_result(),
+                    cache_hit=True,
+                    cache_expired=False,
+                    extraction_performed=False,
+                )
+
+            # 캐시가 없거나 만료된 경우에만 Playwright를 실행한다.
+            extracted_result = self.extractor.extract(
+                product_id=product.product_id,
+                product_url=product.product_url,
+            )
 
         # 추출 실패 결과는 DB에 저장하지 않는다.
         #
         # 만료된 기존 캐시가 있더라도 삭제하지 않으므로
         # 이전 데이터는 DB에 그대로 보존된다.
-        if not extracted_result.extraction_success:
+            if not extracted_result.extraction_success:
+                return ProductIngredientResolution(
+                    result=extracted_result,
+                    cache_hit=False,
+                    cache_expired=cache_expired,
+                    extraction_performed=True,
+                )
+
+        # extraction_success가 True인데 성분 목록이 비어 있다면
+        # 정상적인 추출 성공으로 볼 수 없다.
+            if not extracted_result.ingredients:
+                failed_result = (
+                    extracted_result.model_copy(
+                        update={
+                            "extraction_success": False,
+                            "error_message": (
+                                "전성분 추출 결과가 비어 있습니다."
+                            ),
+                        }
+                    )
+                )
+                return ProductIngredientResolution(
+                    result=failed_result,
+                    cache_hit=False,
+                    cache_expired=cache_expired,
+                    extraction_performed=True,
+                )
+
+        # 지금부터 TTL 기간만큼 캐시를 유효하게 설정한다.
+            expires_at = now + timedelta(days=self.ttl_days)
+
+        # 성공한 추출 결과만 Repository에 저장한다.
+            self.repository.save_ingredients(
+                product=product,
+                result=extracted_result,
+                expires_at=expires_at,
+                option_id=normalized_option_id,
+                option_name=option_name,
+            )
+
             return ProductIngredientResolution(
                 result=extracted_result,
                 cache_hit=False,
@@ -149,47 +243,109 @@ class ProductIngredientCacheService:
                 extraction_performed=True,
             )
 
-        # extraction_success가 True인데 성분 목록이 비어 있다면
-        # 정상적인 추출 성공으로 볼 수 없다.
-        if not extracted_result.ingredients:
-            failed_result = (
-                extracted_result.model_copy(
-                    update={
-                        "extraction_success": False,
-                        "error_message": (
-                            "전성분 추출 결과가 "
-                            "비어 있습니다."
-                        ),
-                    }
-                )
+    def get_cached_preparation(
+        self,
+        product: ProductCandidate,
+    ) -> ProductOptionPreparationResult | None:
+        getter = getattr(self.repository, "get_cached_preparation", None)
+        if getter is None:
+            return None
+        cached = getter(
+            source=product.source,
+            external_product_id=product.product_id,
+            now=self._normalize_datetime(self.clock()),
+        )
+        if cached is None:
+            return None
+        if cached.status == "not_applicable":
+            return ProductOptionPreparationResult(
+                requires_option_selection=False,
+                can_analyze=True,
+                status="not_applicable",
             )
-
-            return ProductIngredientResolution(
-                result=failed_result,
-                cache_hit=False,
-                cache_expired=cache_expired,
-                extraction_performed=True,
+        options = [
+            ProductOption(
+                internal_option_key=option.option_id,
+                source_option_id=option.source_option_id,
+                option_name=option.option_name,
+                raw_option_name=option.raw_option_name or option.option_name,
+                normalized_name=(
+                    option.normalized_name
+                    or normalize_option_label(option.option_name)
+                ),
+                image_url=option.image_url,
+                mapping_status="matched",
+                mapping_confidence=1.0,
+                source_option_names=list(option.source_option_names),
+                source_option_ids=list(option.source_option_ids),
             )
-
-        # 지금부터 TTL 기간만큼 캐시를 유효하게 설정한다.
-        expires_at = now + timedelta(
-            days=self.ttl_days
+            for option in cached.options
+        ]
+        mapping_keys = [
+            normalize_option_mapping_key(option.raw_option_name)
+            for option in options
+        ]
+        # 과거 정책으로 중복 옵션이 저장된 ready cache는 새 canonical
+        # 계약의 완전 HIT로 보지 않고 한 번 다시 수집한다.
+        if (
+            any(not key for key in mapping_keys)
+            or len(mapping_keys) != len(set(mapping_keys))
+        ):
+            return None
+        return ProductOptionPreparationResult(
+            requires_option_selection=True,
+            options=options,
+            can_analyze=True,
+            status="ready",
         )
 
-        # 성공한 추출 결과만 Repository에 저장한다.
-        self.repository.save_ingredients(
-            product=product,
-            result=extracted_result,
-            expires_at=expires_at,
-            option_id=normalized_option_id,
-            option_name=option_name,
+    def mark_collection_complete(
+        self,
+        product: ProductCandidate,
+        *,
+        status: str,
+        option_ids: list[str],
+        options: list[ProductOption] | None = None,
+        parser_version: str,
+    ) -> None:
+        marker = getattr(self.repository, "mark_collection_complete", None)
+        if marker is None:
+            return
+        now = self._normalize_datetime(self.clock())
+        marker(
+            product,
+            status=status,
+            option_ids=option_ids,
+            options=[
+                _option_storage_metadata(option)
+                for option in (options or [])
+            ],
+            expires_at=now + timedelta(days=self.ttl_days),
+            parser_version=parser_version,
         )
 
-        return ProductIngredientResolution(
-            result=extracted_result,
-            cache_hit=False,
-            cache_expired=cache_expired,
-            extraction_performed=True,
+    def store_collection(
+        self,
+        product: ProductCandidate,
+        *,
+        entries: list[ProductCollectionEntry],
+        status: str,
+        options: list[ProductOption],
+        parser_version: str,
+    ) -> None:
+        """상품 단위 전성분과 완료 상태를 원자적으로 저장한다."""
+
+        now = self._normalize_datetime(self.clock())
+        self.repository.save_collection(
+            product,
+            entries=entries,
+            status=status,
+            options=[
+                _option_storage_metadata(option)
+                for option in options
+            ],
+            expires_at=now + timedelta(days=self.ttl_days),
+            parser_version=parser_version,
         )
 
     def get_cached_option(
@@ -212,11 +368,15 @@ class ProductIngredientCacheService:
             option_id=normalized_key,
         )
         if cached is None:
+            if self.cache_only_mode or not self.live_collection_enabled:
+                raise ProductDataUnavailableError()
             raise ValueError(
                 "선택한 옵션의 전성분 캐시가 없습니다. "
                 "상품을 다시 선택해 옵션을 수집해 주세요."
             )
         if cached.is_expired(now):
+            if self.cache_only_mode or not self.live_collection_enabled:
+                raise ProductDataUnavailableError()
             raise ValueError(
                 "선택한 옵션의 전성분 캐시가 만료되었습니다. "
                 "상품을 다시 선택해 옵션을 수집해 주세요."

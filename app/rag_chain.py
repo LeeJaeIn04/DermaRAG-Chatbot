@@ -175,9 +175,31 @@ def build_allergen_section(request: ChatRequest) -> str:
     return f"\n\n{allergen_context}"
 
 
+def build_required_evidence_section(
+    request: ChatRequest,
+) -> str:
+    """Keep official threshold evidence from being lost in generation."""
+
+    if not (request.allergen_context or "").strip():
+        return ""
+
+    return """
+
+[필수 근거 전달]
+- 위 알레르겐 근거에 있는 사용 후 씻어내는 제품과 사용 후 씻어내지 않는 제품의 표시 기준 수치를 답변에 그대로 포함하세요.
+- 두 수치는 독성·안전 기준이 아니라 법적 표시 기준이라고 설명하세요.
+- 실제 함량과 제품 유형을 모르면 해당 제품의 표시 기준 초과 여부를 확정하지 마세요.
+""".rstrip()
+
+
 def build_prompt(request: ChatRequest, context: str) -> str:
     regulation_section = build_regulation_section(request)
     allergen_section = build_allergen_section(request)
+    required_evidence_section = (
+        build_required_evidence_section(
+            request
+        )
+    )
 
     return f"""
     당신은 화장품 성분 기반 피부 반응 원인 후보를 분석하는 RAG 챗봇입니다.
@@ -205,6 +227,7 @@ def build_prompt(request: ChatRequest, context: str) -> str:
     20. 사용자의 기존 알레르기 이력이나 패치 테스트 결과가 없다면 향료 알레르겐 성분이 현재 증상의 원인이라고 단정하지 마세요.
     21. 알레르겐 목록에 exact match되지 않은 성분을 향료 알레르겐이라고 임의로 추정하지 마세요.
     22. "식약처 향료 알레르기 표시 대상 정보를 바탕으로 했다"는 표현은 아래 [검색된 성분 근거]에 실제 알레르겐 정보가 포함된 경우에만 사용하세요.
+    23. 알레르겐 근거에 표시 기준이 있으면 답변에 사용 후 씻어내는 제품 0.01% 초과와 사용 후 씻어내지 않는 제품 0.001% 초과를 모두 명시하고, 독성·안전 기준이 아니라 법적 표시 기준임을 설명하세요.
 
     [사용자 입력]
     질문/피부 반응:
@@ -220,7 +243,7 @@ def build_prompt(request: ChatRequest, context: str) -> str:
     {request.current_routine or "입력 없음"}
 
     [검색된 성분 근거]
-    {context}{regulation_section}{allergen_section}
+    {context}{regulation_section}{allergen_section}{required_evidence_section}
 
     [답변 형식]
     1. 요약
@@ -243,20 +266,29 @@ def build_agent_prompt(
     route_guidance = {
         "safety_warning" : """현재 입력에는 부종, 진물, 물집, 심한 통증, 호흡곤란, 전신 두드러기 등 주의가 필요한 증상 표현이 포함되었을 수 있습니다.
         이 경우 성분 후보 분석보다 안전 안내를 우선하세요.
-        특정 성분이 원인이라고 단저앟지 마록, 증상 악화나 위험 증상이 있으면 피부과 전문의 또는 의료기관 상담을 권장하세요.""",
+        답변 첫 부분에서 증상에 맞는 즉각적인 안전 행동을 먼저 제시한 뒤 나머지 형식을 이어가세요.
+        먼저 의심되는 제품의 사용을 즉시 중단하도록 안내하세요.
+        호흡곤란, 얼굴이나 목의 부종, 급격한 전신 두드러기처럼 심한 증상에는 119 또는 응급실 등 즉각적인 응급 대응을 안내하세요.
+        진물, 물집, 심한 통증에는 신속한 피부과 전문의 또는 의료기관 진료를 권장하세요.
+        특정 성분이 원인이라고 단정하거나 의학적 진단을 확정하지 마세요.""",
 
         "routine_check" : """전성분표가 제공되지 않았거나 부족하므로 성분 DB 기반 원인 후보를 단정하지 마세요.
          대신 현재 루틴, 사용 빈도, 활성 성분 병행 가능성, 새 제품 추가 여부를 중심으로 설명하세요.
           비타민 C, AHA/BHA, 레티놀, 필링, 스크럽 등은 일반적으로 자극감을 느낄 수 있는 사용 상황으로 조심스럽게 언급할 수 있습니다. """,
 
         "general_answer" : """전성분표와 루틴 정보가 부족하므로 성분 DB 기반 원인 후보를 구체적으로 제시하지 마세요.
-        사용자에게 전성분표를 입력하면 더 구체적은 RAG 분석이 가능하다고 안내하세요.
-        현재 정보로 할 수 있는 안전한 확인 바업을 중심으로 답변하세요.""",
+        사용자에게 전성분표를 입력하면 더 구체적인 RAG 분석이 가능하다고 안내하세요.
+        현재 정보로 할 수 있는 안전한 확인 방법을 중심으로 답변하세요.""",
     }
 
     guidance = route_guidance.get(route, route_guidance["general_answer"])
     regulation_section = build_regulation_section(request)
     allergen_section = build_allergen_section(request)
+    required_evidence_section = (
+        build_required_evidence_section(
+            request
+        )
+    )
 
     return f"""
     당신은 화장품 성분 기반 피부 반응 원인 후보를 안전하게 분석하는 DermaRAG Agent입니다.
@@ -267,7 +299,7 @@ def build_agent_prompt(
     [route별 답변 지침]
     {guidance}
 
-    [공통 안전 원친]
+    [공통 안전 원칙]
     1. 특정 성분이 피부 반응의 원인이라고 단정하지 마세요.
     2. 검색 근거가 없는 성분 정보는 근거가 있는 것처럼 말하지 마세요.
     3. 식약처 원료성분 정보만으로 자극성, 안전성, 여드름 유발 가능성을 단정하지 마세요.
@@ -287,6 +319,7 @@ def build_agent_prompt(
     17. 사용자의 기존 알레르기 이력이나 패치 테스트 결과가 없다면 향료 알레르겐 성분이 현재 증상의 원인이라고 단정하지 마세요.
     18. 알레르겐 목록에 exact match되지 않은 성분을 향료 알레르겐이라고 임의로 추정하지 마세요.
     19. "식약처 향료 알레르기 표시 대상 정보를 바탕으로 했다"는 표현은 아래 [검색된 성분 근거]에 실제 알레르겐 정보가 포함된 경우에만 사용하세요.
+    20. 알레르겐 근거에 표시 기준이 있으면 답변에 사용 후 씻어내는 제품 0.01% 초과와 사용 후 씻어내지 않는 제품 0.001% 초과를 모두 명시하고, 독성·안전 기준이 아니라 법적 표시 기준임을 설명하세요.
 
     [사용자 입력]
     질문/피부 반응:
@@ -299,7 +332,7 @@ def build_agent_prompt(
     {request.current_routine or "입력 없음"}
 
     [검색된 성분 근거]
-    {context}{regulation_section}{allergen_section}
+    {context}{regulation_section}{allergen_section}{required_evidence_section}
 
     [감지된 주의 정보]
     {", ".join(warnings) if warnings else "없음"}
@@ -307,7 +340,7 @@ def build_agent_prompt(
     [답변 형식]
     1. 요약
     2. 가능성 있는 원인 후보
-    3. 루틴/사용 사오항에서 함께 볼 점
+    3. 루틴/사용 상황에서 함께 볼 점
     4. 지금 할 수 있는 안전한 대응
     5. 주의 문구
 

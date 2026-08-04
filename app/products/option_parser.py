@@ -21,6 +21,18 @@ _OPTION_CODE_PATTERN = re.compile(
     r"(?i)(?:[a-z]+\s*)?\d+(?:\s*[a-z]+)?(?:\s*호)?"
 )
 _BRACKET_BLOCK_PATTERN = re.compile(r"\[[^\[\]]*\]")
+_LEADING_BRACKET_BLOCKS_PATTERN = re.compile(
+    r"^\s*((?:\[[^\[\]]*\]\s*)+)"
+)
+_VERIFIED_PROMOTION_MARKERS = (
+    "기획",
+    "단품",
+    "new",
+    "단독",
+)
+_LEADING_PROMOTION_TEXT_PATTERN = re.compile(
+    r"(?i)^\s*(?:기획|단품)(?=\s|[/_\-·])(?:\s|[/_\-·])*"
+)
 
 
 def _strip_bracket_blocks(value: str) -> str:
@@ -38,6 +50,123 @@ def _strip_bracket_blocks(value: str) -> str:
 
 def normalize_option_label(value: str) -> str:
     return normalize_text_with_indexes(value).normalized_text
+
+
+def _strip_verified_promotion_prefix(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value)
+    bracket_prefix = _LEADING_BRACKET_BLOCKS_PATTERN.match(normalized)
+    if bracket_prefix is not None:
+        contents = _BRACKET_BLOCK_PATTERN.findall(bracket_prefix.group(1))
+        normalized_contents = [
+            normalize_option_label(content[1:-1])
+            for content in contents
+        ]
+        if any(
+            marker in content
+            for content in normalized_contents
+            for marker in _VERIFIED_PROMOTION_MARKERS
+        ):
+            normalized = normalized[bracket_prefix.end():]
+
+    return _LEADING_PROMOTION_TEXT_PATTERN.sub("", normalized).strip()
+
+
+def normalize_option_mapping_key(value: str) -> str:
+    """표시값을 보존한 채 옵션 매핑 비교에만 쓰는 정규화 키."""
+
+    without_promotion = _strip_verified_promotion_prefix(value)
+    without_shade_suffix = re.sub(
+        r"(?<=\d)\s*호",
+        "",
+        without_promotion,
+    )
+    return normalize_option_label(without_shade_suffix)
+
+
+def _canonical_option_display_name(value: str) -> str:
+    """첫 원본 옵션에서 프로모션 표기만 걷어낸 안정적인 표시명."""
+
+    without_promotion = _strip_verified_promotion_prefix(value)
+    without_shade_suffix = re.sub(
+        r"(?<=\d)\s*호",
+        "",
+        without_promotion,
+    )
+    separated = re.sub(r"[/_·-]+", " ", without_shade_suffix)
+    display_name = " ".join(
+        unicodedata.normalize("NFKC", separated).split()
+    )
+    return display_name or " ".join(value.split())
+
+
+def canonicalize_product_options(
+    options: list[ProductOption],
+) -> list[ProductOption]:
+    """한 상품의 옵션을 비교용 key 기준 canonical 그룹으로 병합한다."""
+
+    grouped: dict[str, ProductOption] = {}
+    ordered_keys: list[str] = []
+
+    for option_index, option in enumerate(options):
+        mapping_key = normalize_option_mapping_key(
+            option.raw_option_name
+        )
+        # 빈 key는 다른 빈 key와 합치지 않고 각자 unsupported 판정을
+        # 받을 수 있도록 원본 순서 기반 내부 group key를 사용한다.
+        group_key = mapping_key or f"__empty__:{option_index}"
+        source_names = option.source_option_names or [
+            option.raw_option_name
+        ]
+        source_ids = option.source_option_ids or (
+            [option.source_option_id]
+            if option.source_option_id
+            else []
+        )
+
+        canonical = grouped.get(group_key)
+        if canonical is None:
+            ordered_keys.append(group_key)
+            if not mapping_key:
+                grouped[group_key] = option.model_copy(
+                    update={
+                        "source_option_names": list(source_names),
+                        "source_option_ids": list(source_ids),
+                    }
+                )
+                continue
+
+            display_name = _canonical_option_display_name(
+                option.raw_option_name
+            )
+            grouped[group_key] = option.model_copy(
+                update={
+                    "internal_option_key": make_internal_option_key(
+                        mapping_key
+                    ),
+                    "option_name": display_name,
+                    "normalized_name": mapping_key,
+                    "source_option_names": list(source_names),
+                    "source_option_ids": list(source_ids),
+                }
+            )
+            continue
+
+        merged_names = list(canonical.source_option_names)
+        for source_name in source_names:
+            if source_name not in merged_names:
+                merged_names.append(source_name)
+        merged_ids = list(canonical.source_option_ids)
+        for source_id in source_ids:
+            if source_id not in merged_ids:
+                merged_ids.append(source_id)
+        grouped[group_key] = canonical.model_copy(
+            update={
+                "source_option_names": merged_names,
+                "source_option_ids": merged_ids,
+            }
+        )
+
+    return [grouped[key] for key in ordered_keys]
 
 
 def normalize_text_with_indexes(value: str) -> NormalizedTextIndex:
@@ -63,6 +192,33 @@ def normalize_text_with_indexes(value: str) -> NormalizedTextIndex:
             normalized.append(folded_character)
             indexes.append(original_index)
 
+    return NormalizedTextIndex(
+        normalized_text="".join(normalized),
+        original_indexes=indexes,
+    )
+
+
+def normalize_option_mapping_text_with_indexes(
+    value: str,
+) -> NormalizedTextIndex:
+    """원문 위치를 보존하면서 숫자 뒤의 색상 단위 `호`만 제거한다."""
+
+    indexed = normalize_text_with_indexes(value)
+    normalized: list[str] = []
+    indexes: list[int] = []
+    for character, original_index in zip(
+        indexed.normalized_text,
+        indexed.original_indexes,
+        strict=True,
+    ):
+        if (
+            character == "호"
+            and normalized
+            and normalized[-1].isdigit()
+        ):
+            continue
+        normalized.append(character)
+        indexes.append(original_index)
     return NormalizedTextIndex(
         normalized_text="".join(normalized),
         original_indexes=indexes,
@@ -121,6 +277,7 @@ class _HeaderMatch:
     original_end: int
     method: str
     confidence: float
+    duplicate_header_spans: tuple[tuple[int, int], ...] = ()
 
 
 def _all_occurrences(
@@ -148,107 +305,160 @@ def _code_and_label_candidate(
     if code_match is None:
         return None
 
-    candidate = normalize_option_label(
+    candidate = normalize_option_mapping_key(
         header_source[code_match.start():]
     )
-    code = normalize_option_label(code_match.group(0))
+    code = normalize_option_mapping_key(code_match.group(0))
     if len(candidate) <= len(code):
-        return None
+        # 17N처럼 문자와 숫자가 결합된 전체 shade code는 기존의
+        # 안전한 exact match를 유지한다. 숫자만 있는 code fallback은
+        # 성분 표기의 숫자와 충돌할 수 있으므로 허용하지 않는다.
+        return (
+            candidate
+            if any(character.isdigit() for character in candidate)
+            and any(character.isalpha() for character in candidate)
+            else None
+        )
     return candidate
 
 
-def _code_candidate(
+def _has_number_and_color_name(value: str) -> bool:
+    return any(character.isdigit() for character in value) and any(
+        character.isalpha() for character in value
+    )
+
+
+def _safe_alphanumeric_code_candidate(
     option_name: str,
 ) -> str | None:
     header_source = _strip_bracket_blocks(option_name)
     code_match = _OPTION_CODE_PATTERN.search(header_source)
     if code_match is None:
         return None
-    code = normalize_option_label(code_match.group(0))
-    return code or None
+    code = normalize_option_mapping_key(code_match.group(0))
+    return code if _has_number_and_color_name(code) else None
 
 
 def _find_header_match(
     raw_text: str,
     raw_index: NormalizedTextIndex,
+    mapping_index: NormalizedTextIndex,
     option: ProductOption,
     option_index: int,
 ) -> tuple[_HeaderMatch | None, bool]:
-    candidates: list[tuple[str, str, float]] = [
-        (
-            option.normalized_name,
-            "normalized_full_name",
-            1.0,
+    mapping_key = normalize_option_mapping_key(option.raw_option_name)
+    full_name = normalize_option_label(option.raw_option_name)
+    candidates: list[
+        tuple[str, str, float, NormalizedTextIndex]
+    ] = []
+    if mapping_key and _has_number_and_color_name(mapping_key):
+        candidates.append(
+            (
+                mapping_key,
+                "normalized_mapping_key",
+                1.0,
+                mapping_index,
+            )
         )
-    ]
+    if full_name and all(
+        full_name != candidate
+        for candidate, _, _, _ in candidates
+    ):
+        candidates.append(
+            (
+                full_name,
+                "normalized_full_name",
+                0.95,
+                raw_index,
+            )
+        )
 
     code_and_label = _code_and_label_candidate(
         option.raw_option_name
     )
     if (
         code_and_label
-        and code_and_label != option.normalized_name
+        and _has_number_and_color_name(code_and_label)
+        and all(
+            code_and_label != candidate
+            for candidate, _, _, _ in candidates
+        )
     ):
         candidates.append(
-            (code_and_label, "code_and_label", 0.9)
+            (
+                code_and_label,
+                "code_and_label",
+                0.9,
+                mapping_index,
+            )
         )
 
-    code = _code_candidate(option.raw_option_name)
+    safe_code = _safe_alphanumeric_code_candidate(
+        option.raw_option_name
+    )
     if (
-        code
-        and all(code != candidate for candidate, _, _ in candidates)
+        safe_code
+        and all(
+            safe_code != candidate
+            for candidate, _, _, _ in candidates
+        )
     ):
-        candidates.append((code, "exact_code", 0.75))
+        candidates.append(
+            (
+                safe_code,
+                "exact_alphanumeric_code",
+                0.8,
+                mapping_index,
+            )
+        )
 
-    for needle, method, confidence in candidates:
+    for needle, method, confidence, candidate_index in candidates:
         occurrences = _all_occurrences(
-            raw_index.normalized_text,
+            candidate_index.normalized_text,
             needle,
         )
-        if len(occurrences) > 1:
-            return None, True
         if len(occurrences) == 0:
             continue
 
+        def original_span(normalized_start: int) -> tuple[int, int]:
+            normalized_end = normalized_start + len(needle)
+            original_start = candidate_index.original_indexes[
+                normalized_start
+            ]
+            original_end = (
+                candidate_index.original_indexes[
+                    normalized_end - 1
+                ]
+                + 1
+            )
+
+            # 대괄호 헤더는 괄호까지, 상품명이 옵션 앞에 붙은
+            # 헤더는 해당 줄의 시작까지 헤더 범위로 보존한다.
+            line_start = raw_text.rfind("\n", 0, original_start) + 1
+            header_prefix = raw_text[line_start:original_start]
+            if (
+                header_prefix.strip()
+                and "," not in header_prefix
+                and len(normalize_option_label(header_prefix)) <= 100
+            ):
+                original_start = line_start
+            elif (
+                original_start > 0
+                and raw_text[original_start - 1] in "[({"
+            ):
+                original_start -= 1
+
+            while (
+                original_end < len(raw_text)
+                and raw_text[original_end] in "])}"
+            ):
+                original_end += 1
+            return original_start, original_end
+
+        spans = [original_span(position) for position in occurrences]
+        original_start, original_end = spans[0]
         normalized_start = occurrences[0]
         normalized_end = normalized_start + len(needle)
-        original_start = raw_index.original_indexes[
-            normalized_start
-        ]
-        original_end = (
-            raw_index.original_indexes[
-                normalized_end - 1
-            ]
-            + 1
-        )
-
-        # 대괄호 헤더는 괄호까지, 상품명이 옵션 앞에 붙은
-        # 헤더는 해당 줄의 시작까지 헤더 범위로 보존한다.
-        line_start = raw_text.rfind(
-            "\n",
-            0,
-            original_start,
-        ) + 1
-        header_prefix = raw_text[
-            line_start:original_start
-        ]
-        if (
-            header_prefix.strip()
-            and "," not in header_prefix
-            and len(normalize_option_label(header_prefix)) <= 100
-        ):
-            original_start = line_start
-        elif (
-            original_start > 0
-            and raw_text[original_start - 1] in "[({"
-        ):
-            original_start -= 1
-
-        while (
-            original_end < len(raw_text)
-            and raw_text[original_end] in "])}"
-        ):
-            original_end += 1
 
         return (
             _HeaderMatch(
@@ -259,6 +469,7 @@ def _find_header_match(
                 original_end=original_end,
                 method=method,
                 confidence=confidence,
+                duplicate_header_spans=tuple(spans[1:]),
             ),
             False,
         )
@@ -306,6 +517,7 @@ def split_option_ingredient_sections(
     raw_text: str,
     options: list[ProductOption],
 ) -> list[OptionIngredientSection]:
+    options = canonicalize_product_options(options)
     if not raw_text.strip():
         return [
             OptionIngredientSection(
@@ -320,13 +532,22 @@ def split_option_ingredient_sections(
         ]
 
     raw_index = normalize_text_with_indexes(raw_text)
+    mapping_index = normalize_option_mapping_text_with_indexes(raw_text)
     matches: dict[int, _HeaderMatch] = {}
     ambiguous_indexes: set[int] = set()
+    unsupported_indexes: set[int] = {
+        option_index
+        for option_index, option in enumerate(options)
+        if not normalize_option_mapping_key(option.raw_option_name)
+    }
 
     for option_index, option in enumerate(options):
+        if option_index in unsupported_indexes:
+            continue
         match, ambiguous = _find_header_match(
             raw_text,
             raw_index,
+            mapping_index,
             option,
             option_index,
         )
@@ -352,8 +573,8 @@ def split_option_ingredient_sections(
             if same_span:
                 continue
             overlaps = (
-                left.normalized_start < right.normalized_end
-                and right.normalized_start < left.normalized_end
+                left.original_start < right.original_end
+                and right.original_start < left.original_end
             )
             if overlaps:
                 ambiguous_indexes.update(
@@ -372,9 +593,13 @@ def split_option_ingredient_sections(
     # 받도록, 고유한 (start, end) 구간 단위로 다음 경계를 계산한다.
     distinct_spans: list[tuple[int, int]] = []
     for match in ordered_matches:
-        span = (match.original_start, match.original_end)
-        if not distinct_spans or distinct_spans[-1] != span:
-            distinct_spans.append(span)
+        distinct_spans.extend(
+            [
+                (match.original_start, match.original_end),
+                *match.duplicate_header_spans,
+            ]
+        )
+    distinct_spans = sorted(set(distinct_spans))
 
     next_start_by_span: dict[tuple[int, int], int] = {}
     for position, span in enumerate(distinct_spans):
@@ -390,6 +615,18 @@ def split_option_ingredient_sections(
 
     sections: list[OptionIngredientSection] = []
     for option_index, option in enumerate(options):
+        if option_index in unsupported_indexes:
+            sections.append(
+                OptionIngredientSection(
+                    internal_option_key=option.internal_option_key,
+                    source_option_id=option.source_option_id,
+                    option_name=option.option_name,
+                    mapping_status="unsupported",
+                    mapping_method="empty_mapping_key",
+                    mapping_confidence=0.0,
+                )
+            )
+            continue
         if option_index in ambiguous_indexes:
             sections.append(
                 OptionIngredientSection(
@@ -467,6 +704,9 @@ def split_option_ingredient_sections(
                 ),
                 mapping_confidence=(
                     match.confidence if valid else 0.0
+                ),
+                duplicate_header_count=len(
+                    match.duplicate_header_spans
                 ),
             )
         )

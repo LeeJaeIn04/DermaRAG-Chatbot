@@ -9,9 +9,10 @@ from app.skin_rules import (
 def build_active_skin_profiles(
     profile: UserSkinProfile,
 ) -> set[str]:
-    active_profiles = {
-        profile.skin_type,
-    }
+    active_profiles: set[str] = set()
+
+    if profile.skin_type:
+        active_profiles.add(profile.skin_type)
 
     if (
         profile.skin_type == "oily"
@@ -29,6 +30,14 @@ def build_active_skin_profiles(
     if "acne_prone" in profile.concerns:
         active_profiles.add(
             "acne_prone"
+        )
+
+    if (
+        profile.barrier_impaired
+        or "barrier_impaired" in profile.concerns
+    ):
+        active_profiles.add(
+            "barrier_impaired"
         )
 
     return active_profiles

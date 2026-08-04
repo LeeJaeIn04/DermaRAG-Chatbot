@@ -103,11 +103,17 @@ class ProductRegulationSource(BaseModel):
     use_conditions: str | None = None
     warning_text: str | None = None
 
+    source_id: str
     source_authority: str
     source_document: str
+
     notice_number: str
+    notice_label: str
     notice_date: str
+
     source_section: str
+    source_table: int | None = None
+    source_row: int
 
 class ProductFragranceAllergenSource(BaseModel):
     """
@@ -149,6 +155,7 @@ class ProductFragranceAllergenSource(BaseModel):
     rinse_off_threshold: str | None = None
     leave_on_threshold: str | None = None
 
+    source_id: str
     source_authority: str
     source_document: str
     source_document_version: str | None = None

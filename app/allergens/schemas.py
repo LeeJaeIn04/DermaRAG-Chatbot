@@ -32,6 +32,7 @@ class FragranceAllergen(BaseModel):
     rinse_off_threshold: str | None = None
     leave_on_threshold: str | None = None
 
+    source_id: str
     source_authority: str
     source_document: str
     source_document_version: str | None = None

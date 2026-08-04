@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatInput } from "../components/chat/ChatInput";
 import { ChatLayout } from "../components/chat/ChatLayout";
 import { ChatMessage } from "../components/chat/ChatMessage";
@@ -7,6 +7,7 @@ import { TypingIndicator } from "../components/chat/TypingIndicator";
 import { SkinProfilePanel } from "../components/profile/SkinProfilePanel";
 import { useProductAnalysisChat } from "../hooks/useProductAnalysisChat";
 import type { SkinProfile } from "../types/chat";
+import { hasSkinProfileData, summarizeSkinProfile } from "../utils/skin";
 
 const emptyProfile: SkinProfile = {
   skinType: "",
@@ -24,41 +25,58 @@ const emptyProfile: SkinProfile = {
 
 export function ChatPage() {
   const [profile, setProfile] = useState<SkinProfile>(emptyProfile);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profilePanelMode, setProfilePanelMode] = useState<
+    "global" | "analysis" | null
+  >(null);
+  const requestProfileForAnalysis = useCallback(() => {
+    setProfilePanelMode("analysis");
+  }, []);
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const {
     messages,
     flowState,
     selectedProduct,
     selectedOption,
+    activeSkinPreferenceMessageId,
+    retryMessageId,
+    canRetryAnalysis,
     recentAnalyses,
     submitQuestion,
     chooseProduct,
     chooseOption,
+    useSkinProfileForPendingAnalysis,
+    skipSkinProfileForPendingAnalysis,
+    completeSkinProfileForPendingAnalysis,
+    cancelSkinProfileEntry,
+    goBackFromSkinPreference,
+    retryAnalysis,
     startNewChat,
     isBusy,
-  } = useProductAnalysisChat(profile);
+  } = useProductAnalysisChat(profile, requestProfileForAnalysis);
 
-  const profileConfigured = useMemo(
-    () =>
-      Boolean(
-        profile.skinType ||
-          profile.sensitive ||
-          profile.dehydration ||
-          profile.barrierImpaired ||
-          profile.concerns.length ||
-          profile.customSymptom ||
-          profile.symptomTiming ||
-          profile.knownAllergies ||
-          profile.productArea ||
-          profile.currentRoutine,
-      ),
-    [profile],
-  );
+  const profileConfigured = useMemo(() => hasSkinProfileData(profile), [profile]);
+  const profileSummary = useMemo(() => summarizeSkinProfile(profile), [profile]);
 
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [flowState, messages]);
+
+  const saveProfile = (savedProfile: SkinProfile) => {
+    const mode = profilePanelMode;
+    setProfile(savedProfile);
+    setProfilePanelMode(null);
+    if (mode === "analysis") {
+      completeSkinProfileForPendingAnalysis(savedProfile);
+    }
+  };
+
+  const closeProfilePanel = () => {
+    const mode = profilePanelMode;
+    setProfilePanelMode(null);
+    if (mode === "analysis") {
+      cancelSkinProfileEntry();
+    }
+  };
 
   const isInitial = messages.length === 1 && messages[0].id === "welcome";
 
@@ -68,7 +86,7 @@ export function ChatPage() {
         profileConfigured={profileConfigured}
         recentAnalyses={recentAnalyses}
         onNewChat={startNewChat}
-        onOpenProfile={() => setProfileOpen(true)}
+        onOpenProfile={() => setProfilePanelMode("global")}
         composer={<ChatInput onSubmit={submitQuestion} isBusy={isBusy} />}
       >
         <div className={`conversation ${isInitial ? "is-initial" : ""}`}>
@@ -91,6 +109,18 @@ export function ChatPage() {
                       !selectedOption
                     }
                     onOptionSelect={chooseOption}
+                    activeSkinPreferenceMessageId={
+                      flowState === "waiting_for_skin_preference"
+                        ? activeSkinPreferenceMessageId
+                        : null
+                    }
+                    profileSummary={profileSummary}
+                    onUseSkinProfile={useSkinProfileForPendingAnalysis}
+                    onSkipSkinProfile={skipSkinProfileForPendingAnalysis}
+                    onBackFromSkinPreference={goBackFromSkinPreference}
+                    retryMessageId={retryMessageId}
+                    canRetryAnalysis={canRetryAnalysis}
+                    onRetryAnalysis={retryAnalysis}
                   />
                 </div>
               ))
@@ -100,11 +130,12 @@ export function ChatPage() {
         </div>
       </ChatLayout>
 
-      {profileOpen && (
+      {profilePanelMode && (
         <SkinProfilePanel
           value={profile}
-          onClose={() => setProfileOpen(false)}
-          onSave={setProfile}
+          analysisMode={profilePanelMode === "analysis"}
+          onClose={closeProfilePanel}
+          onSave={saveProfile}
         />
       )}
     </>

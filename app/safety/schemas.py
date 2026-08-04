@@ -38,6 +38,7 @@ class IngredientRegulation(BaseModel):
     use_conditions: str | None = None
     warning_text: str | None = None
 
+    source_id: str
     source_authority: str
     source_document: str
 

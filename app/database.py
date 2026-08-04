@@ -1,13 +1,14 @@
-import os
 from collections.abc import Generator
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import (
     DeclarativeBase,
     Session,
     sessionmaker,
 )
+
+from app.config import settings
 
 
 # 로컬 SQLite 파일을 저장할 폴더다.
@@ -21,10 +22,7 @@ DATA_DIRECTORY.mkdir(
 
 # 운영 환경에서는 DATABASE_URL 환경변수를 사용할 수 있고,
 # 설정하지 않으면 로컬 SQLite DB를 사용한다.
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///./data/derma_rag.db",
-)
+DATABASE_URL = settings.database_url
 
 
 # SQLite는 기본적으로 하나의 thread에서 생성한 연결을
@@ -32,11 +30,12 @@ DATABASE_URL = os.getenv(
 #
 # FastAPI는 요청을 다른 thread에서 처리할 수 있으므로
 # SQLite를 사용할 때 check_same_thread=False가 필요하다.
-connect_args: dict[str, bool] = {}
+connect_args: dict[str, bool | float] = {}
 
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {
         "check_same_thread": False,
+        "timeout": settings.sqlite_busy_timeout_ms / 1_000,
     }
 
 
@@ -44,7 +43,28 @@ if DATABASE_URL.startswith("sqlite"):
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
+    pool_pre_ping=True,
 )
+
+
+if DATABASE_URL.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def _configure_sqlite_connection(
+        dbapi_connection,
+        _connection_record,
+    ) -> None:
+        """각 SQLite 연결에 무결성과 동시성 관련 PRAGMA를 적용한다."""
+
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.execute(
+                "PRAGMA busy_timeout="
+                f"{settings.sqlite_busy_timeout_ms}"
+            )
+            cursor.execute("PRAGMA journal_mode=WAL")
+        finally:
+            cursor.close()
 
 
 # DB 작업마다 SessionLocal()로 독립적인 session을 만든다.
@@ -89,7 +109,88 @@ def create_database_tables() -> None:
     # import가 실행되면 ProductRecord 등의 모델이
     # Base.metadata에 등록된다.
     from app.products import db_models  # noqa: F401
+    from app.products.product_name_normalization import normalize_product_name
 
-    Base.metadata.create_all(
-        bind=engine
-    )
+    # 기존 SQLite의 products 테이블에는 create_all()만으로 새 컬럼이
+    # 추가되지 않는다. 새 index 생성보다 먼저 컬럼을 보강한다.
+    if engine.dialect.name == "sqlite":
+        with engine.begin() as connection:
+            products_exists = connection.execute(
+                text(
+                    "SELECT 1 FROM sqlite_master "
+                    "WHERE type = 'table' AND name = 'products'"
+                )
+            ).first()
+            if products_exists is not None:
+                product_columns = {
+                    row[1]
+                    for row in connection.execute(
+                        text("PRAGMA table_info(products)")
+                    )
+                }
+                if "normalized_product_name" not in product_columns:
+                    connection.execute(
+                        text(
+                            "ALTER TABLE products ADD COLUMN "
+                            "normalized_product_name VARCHAR(500) "
+                            "NOT NULL DEFAULT ''"
+                        )
+                    )
+
+    Base.metadata.create_all(bind=engine)
+
+    # create_all()은 기존 테이블에 새 index를 추가하지 않으므로
+    # idempotent schema upgrade로 기존 SQLite DB도 보강한다.
+    if engine.dialect.name == "sqlite":
+        with engine.begin() as connection:
+            # 기존 표시용 product_name은 변경하지 않고 검색용 컬럼만
+            # 현재 정규화 규칙으로 안전하게 backfill한다.
+            products = connection.execute(
+                text(
+                    "SELECT id, product_name, normalized_product_name "
+                    "FROM products"
+                )
+            ).mappings()
+            for product in products:
+                normalized_name = normalize_product_name(
+                    product["product_name"]
+                )
+                if product["normalized_product_name"] == normalized_name:
+                    continue
+                connection.execute(
+                    text(
+                        "UPDATE products SET normalized_product_name = "
+                        ":normalized_name WHERE id = :product_id"
+                    ),
+                    {
+                        "normalized_name": normalized_name,
+                        "product_id": product["id"],
+                    },
+                )
+
+            connection.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS "
+                    "ix_products_normalized_product_name "
+                    "ON products (normalized_product_name)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS ix_products_category "
+                    "ON products (category)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS ix_products_category_path "
+                    "ON products (category_path)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS "
+                    "ix_product_ingredient_records_product_id "
+                    "ON product_ingredient_records (product_id)"
+                )
+            )

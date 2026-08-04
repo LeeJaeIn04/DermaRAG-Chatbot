@@ -28,6 +28,15 @@ DEFAULT_OUTPUT_PATH = (
     / "mfds_fragrance_allergens.jsonl"
 )
 
+SOURCE_METADATA_PATH = (
+    BASE_DIR
+    / "data"
+    / "allergens"
+    / "mfds"
+    / "raw"
+    / "source_metadata.json"
+)
+
 
 # 6페이지에서 확인된 표의 행 구조:
 #
@@ -51,6 +60,38 @@ def clean_text(value: str) -> str:
     줄바꿈, 탭, 연속 공백을 하나의 공백으로 정리한다.
     """
     return " ".join(value.split())
+
+
+def load_source_metadata() -> dict[str, object]:
+    """
+    향료 알레르겐 원문의 공통 출처 메타데이터를 읽는다.
+    """
+    with SOURCE_METADATA_PATH.open(
+        encoding="utf-8",
+    ) as file:
+        metadata = json.load(file)
+
+    required_fields = [
+        "source_id",
+        "document_title",
+        "document_version",
+        "document_date",
+    ]
+
+    missing_fields = [
+        field
+        for field in required_fields
+        if not metadata.get(field)
+    ]
+
+    if missing_fields:
+        raise ValueError(
+            "출처 메타데이터 필드가 "
+            "누락되었습니다: "
+            + ", ".join(missing_fields)
+        )
+
+    return metadata
 
 
 def extract_page_text(
@@ -114,6 +155,7 @@ def isolate_allergen_table_text(
 
 def parse_allergen_rows(
     table_text: str,
+    source_metadata: dict[str, object],
 ) -> list[dict[str, object]]:
     """
     알레르겐 표 텍스트를 행 단위 레코드로 변환한다.
@@ -157,12 +199,19 @@ def parse_allergen_rows(
             "oxidation_note": None,
             "rinse_off_threshold": "0.01% 초과",
             "leave_on_threshold": "0.001% 초과",
+            "source_id": source_metadata[
+                "source_id"
+            ],
             "source_authority": "MFDS",
-            "source_document": (
-                "화장품 향료 중 알레르기 유발물질 표시 지침"
-            ),
-            "source_document_version": "v2",
-            "source_document_date": "2019-12-30",
+            "source_document": source_metadata[
+                "document_title"
+            ],
+            "source_document_version": source_metadata[
+                "document_version"
+            ],
+            "source_document_date": source_metadata[
+                "document_date"
+            ],
             "source_section": (
                 "참고 1 관련 법령 / 별표 2"
             ),
@@ -273,6 +322,8 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    source_metadata = load_source_metadata()
+
     page_text = extract_page_text(
         pdf_path=args.input,
         page_number=args.page,
@@ -283,7 +334,8 @@ def main() -> None:
     )
 
     records = parse_allergen_rows(
-        table_text
+        table_text,
+        source_metadata,
     )
 
     validate_records(records)

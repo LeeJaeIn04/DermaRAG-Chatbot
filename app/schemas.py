@@ -43,7 +43,7 @@ class PreviousReaction(BaseModel):
 
 
 class UserSkinProfile(BaseModel):
-    skin_type: SkinType
+    skin_type: SkinType | None = None
 
     sensitive: bool = False
     dehydration: bool = False
@@ -170,7 +170,11 @@ class ProductSelectionResponse(BaseModel):
         default_factory=list
     )
     can_analyze: bool = True
-    option_status: str = "not_applicable"
+    option_status: Literal[
+        "ready",
+        "not_applicable",
+        "unavailable",
+    ] = "not_applicable"
     option_error: str | None = None
 
 class ProductIngredientRequest(BaseModel):

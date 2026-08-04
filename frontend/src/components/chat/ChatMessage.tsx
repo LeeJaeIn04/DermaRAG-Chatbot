@@ -7,6 +7,7 @@ import type {
 } from "../../types/product";
 import { ProductAnalysisResult } from "../product/ProductAnalysisResult";
 import { ProductOptionSelector } from "../product/ProductOptionSelector";
+import { SkinPreferencePrompt } from "../profile/SkinPreferencePrompt";
 import { ProductCandidateMessage } from "./ProductCandidateMessage";
 
 interface ChatMessageProps {
@@ -22,6 +23,14 @@ interface ChatMessageProps {
     product: ProductCandidate,
     option: ProductOption,
   ) => void;
+  activeSkinPreferenceMessageId: string | null;
+  profileSummary: string[];
+  onUseSkinProfile: () => void;
+  onSkipSkinProfile: () => void;
+  onBackFromSkinPreference: () => void;
+  retryMessageId: string | null;
+  canRetryAnalysis: boolean;
+  onRetryAnalysis: () => void;
 }
 
 export function ChatMessage({
@@ -31,6 +40,14 @@ export function ChatMessage({
   onProductSelect,
   canSelectOption,
   onOptionSelect,
+  activeSkinPreferenceMessageId,
+  profileSummary,
+  onUseSkinProfile,
+  onSkipSkinProfile,
+  onBackFromSkinPreference,
+  retryMessageId,
+  canRetryAnalysis,
+  onRetryAnalysis,
 }: ChatMessageProps) {
   if (message.kind === "analysis") {
     return (
@@ -78,6 +95,26 @@ export function ChatMessage({
     );
   }
 
+  if (message.kind === "skin-preference") {
+    return (
+      <div className="message-row assistant-row candidate-row">
+        <div className="assistant-avatar" aria-hidden="true">
+          <span>dr</span>
+        </div>
+        <SkinPreferencePrompt
+          content={message.content}
+          productName={message.productName}
+          optionName={message.optionName}
+          profileSummary={profileSummary}
+          canChoose={message.id === activeSkinPreferenceMessageId}
+          onUseProfile={onUseSkinProfile}
+          onSkip={onSkipSkinProfile}
+          onBack={onBackFromSkinPreference}
+        />
+      </div>
+    );
+  }
+
   if (message.kind === "error") {
     return (
       <div className="message-row assistant-row">
@@ -87,6 +124,15 @@ export function ChatMessage({
         <div className="error-card" role="alert">
           <strong>{message.content}</strong>
           <p>질문이나 상품을 다시 확인한 뒤 재시도해 주세요.</p>
+          {canRetryAnalysis && message.id === retryMessageId && (
+            <button
+              type="button"
+              className="retry-analysis-button"
+              onClick={onRetryAnalysis}
+            >
+              같은 조건으로 다시 분석
+            </button>
+          )}
           {message.detail && (
             <details>
               <summary>

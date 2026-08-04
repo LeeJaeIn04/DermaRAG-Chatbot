@@ -1,9 +1,19 @@
+import json
+from pathlib import Path
+
 from app.products.option_parser import (
+    canonicalize_product_options,
     make_internal_option_key,
     make_product_option,
     normalize_option_label,
+    normalize_option_mapping_key,
     normalize_text_with_indexes,
     split_option_ingredient_sections,
+)
+
+
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / (
+    "product_option_mapping_A000000241210.json"
 )
 
 
@@ -60,6 +70,122 @@ def test_normalizes_spaces_brackets_hyphens_slashes_and_dots() -> None:
         "21-N/아이보리.",
     ):
         assert normalize_option_label(value) == expected
+
+
+def test_mapping_key_normalizes_shade_ho_and_spacing() -> None:
+    expected = "23누카다미아"
+    assert normalize_option_mapping_key("23호 누카다미아") == expected
+    assert normalize_option_mapping_key("23 호 누카다미아") == expected
+    assert normalize_option_mapping_key("23호") == "23"
+
+
+def test_mapping_key_removes_only_verified_promotion_prefixes() -> None:
+    expected = "23누카다미아"
+    assert normalize_option_mapping_key("[기획] 23호 누카다미아") == expected
+    assert normalize_option_mapping_key("단품/23호 누카다미아") == expected
+    assert normalize_option_mapping_key("[NEW] 23호 누카다미아") == expected
+
+
+def test_mapping_key_preserves_ho_inside_general_words() -> None:
+    assert normalize_option_mapping_key("호호바오일") == "호호바오일"
+
+
+def test_mapping_matches_safe_shade_name_variants() -> None:
+    for option_name, raw_header in (
+        ("23호 누카다미아", "23 누카다미아"),
+        ("23 호 누카다미아", "23호 누카다미아"),
+        ("[기획] 23호 누카다미아", "23 누카다미아"),
+        ("단품/23호 누카다미아", "23 누카다미아"),
+    ):
+        section = _split(
+            f"{raw_header} 정제수, 글리세린",
+            [option_name],
+        )[0]
+        assert section.mapping_status == "matched"
+
+
+def test_numeric_code_does_not_match_a_different_color_name() -> None:
+    section = _split(
+        "23 피치 피치 미 정제수, 글리세린",
+        ["23호 누카다미아"],
+    )[0]
+    assert section.mapping_status == "unmatched"
+
+
+def test_duplicate_mapping_keys_merge_into_one_canonical_option() -> None:
+    options = [
+        make_product_option(name, source_option_id=str(index))
+        for index, name in enumerate(
+            [
+                "[기획] 23호 누카다미아",
+                "단품/23 누카다미아",
+                "23호 누카다미아",
+            ]
+        )
+    ]
+    canonical = canonicalize_product_options(options)
+    assert len(canonical) == 1
+    assert canonical[0].option_name == "23 누카다미아"
+    assert canonical[0].raw_option_name == "[기획] 23호 누카다미아"
+    assert canonical[0].source_option_names == [
+        "[기획] 23호 누카다미아",
+        "단품/23 누카다미아",
+        "23호 누카다미아",
+    ]
+    assert canonical[0].source_option_ids == ["0", "1", "2"]
+
+    sections = _split(
+        "23 누카다미아 정제수, 글리세린",
+        [option.raw_option_name for option in options],
+    )
+    assert len(sections) == 1
+    assert sections[0].mapping_status == "matched"
+
+
+def test_different_mapping_keys_and_same_number_stay_separate() -> None:
+    canonical = canonicalize_product_options(
+        [
+            make_product_option("23호 누카다미아"),
+            make_product_option("23호 베어피그"),
+            make_product_option("24호 누카다미아"),
+        ]
+    )
+    assert [option.normalized_name for option in canonical] == [
+        "23누카다미아",
+        "23베어피그",
+        "24누카다미아",
+    ]
+
+
+def test_canonical_groups_do_not_cross_product_collection_calls() -> None:
+    first = canonicalize_product_options(
+        [make_product_option("23호 누카다미아", source_option_id="first")]
+    )
+    second = canonicalize_product_options(
+        [make_product_option("23호 누카다미아", source_option_id="second")]
+    )
+    assert first[0].source_option_ids == ["first"]
+    assert second[0].source_option_ids == ["second"]
+
+
+def test_mapping_normalization_does_not_change_display_name() -> None:
+    option = make_product_option("[기획] 23호 누카다미아")
+    assert option.option_name == "[기획] 23호 누카다미아"
+    assert option.raw_option_name == "[기획] 23호 누카다미아"
+    assert option.normalized_name == "기획23호누카다미아"
+    assert normalize_option_mapping_key(option.raw_option_name) == "23누카다미아"
+
+
+def test_target_product_minimal_fixture_reproduces_partial_mapping() -> None:
+    fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+    sections = _split(
+        "\n".join(fixture["raw_sections"]),
+        fixture["options"],
+    )
+    assert fixture["product_id"] == "A000000241210"
+    assert [section.mapping_status for section in sections] == fixture[
+        "expected_mapping_statuses"
+    ]
 
 
 def test_normalized_index_maps_back_to_original_text() -> None:
@@ -142,7 +268,7 @@ def test_unmatched_option_is_not_marked_as_analyzable() -> None:
     assert sections[1].ingredients == []
 
 
-def test_repeated_header_is_ambiguous() -> None:
+def test_repeated_header_uses_first_section_without_ambiguity() -> None:
     sections = _split(
         (
             "[19호] 정제수, 글리세린\n"
@@ -151,8 +277,9 @@ def test_repeated_header_is_ambiguous() -> None:
         ["19호"],
     )
 
-    assert sections[0].mapping_status == "ambiguous"
-    assert sections[0].ingredients == []
+    assert sections[0].mapping_status == "matched"
+    assert sections[0].ingredients == ["정제수", "글리세린"]
+    assert sections[0].duplicate_header_count == 1
 
 
 def test_identical_span_options_share_the_same_section() -> None:
