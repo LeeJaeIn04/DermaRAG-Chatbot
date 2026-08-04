@@ -1,722 +1,253 @@
-# MFDS 규제 및 피부 맞춤 성분 분석 기능 추가
+<h1 align="center">DermaRAG</h1>
 
-## 1. 개요
+<p align="center">
+  화장품 상품의 전성분을 수집하고, 성분 및 규제 문서를 검색하여<br>
+  사용자에게 분석 결과를 제공하는 LangGraph 기반 RAG 서비스입니다.
+</p>
 
-DermaRAG는 화장품 상품의 옵션별 전성분을 수집하고, 식품의약품안전처 규제 정보와 사용자 피부 프로필을 기준으로 성분을 분석하는 RAG 기반 서비스입니다.
+<p align="center">
+  사용자는 올리브영 상품을 검색하고 원하는 상품과 옵션을 선택할 수 있습니다.<br>
+  선택된 상품의 전성분은 자동으로 수집·정규화되며, SQLite에 캐싱된 데이터를 우선 활용하여<br>
+  불필요한 브라우저 실행과 중복 수집을 줄입니다.
+</p>
 
-사용자는 상품과 세부 옵션을 선택한 뒤 자신의 피부 타입, 민감성 여부, 피부 고민, 알레르기 및 과거 반응 성분을 입력할 수 있습니다.
+## 주요 기능
 
-시스템은 선택한 옵션의 전성분을 기준으로 다음 정보를 제공합니다.
+- 화장품 상품 검색
+- 상품별 옵션 조회 및 선택
+- 옵션별 전성분 수집 및 분리
+- 전성분 데이터 정규화
+- SQLite 기반 상품·옵션·전성분 캐싱
+- 알레르기 유발 성분 분석
+- 성분 안전성 분석
+- 피부 타입별 성분 적합성 분석
+- 화장품 성분 및 규제 문서 검색
+- LangGraph 기반 RAG 답변 생성
+- LangSmith 기반 실행 추적 및 평가
+- FastAPI REST API
+- React 기반 사용자 인터페이스
 
-- MFDS 화장품 규제 정보
-- 사용자 피부 조건별 주의 성분
-- 피부 조건별 긍정 또는 참고 성분
-- 개인 알레르기 및 과거 반응 성분
-- RAG와 LLM을 이용한 성분 설명
-- 분석 근거 및 출처
+## 시스템 구성
 
-이번 개발에서는 기존 성분 검색 중심의 RAG에 다음 기능을 추가했습니다.
+DermaRAG는 FastAPI 백엔드와 React 프론트엔드로 구성됩니다.
 
-1. MFDS 화장품 규제 데이터 저장 및 정규화
-2. 상품 옵션별 전성분 수집·분리·캐시
-3. MFDS 규제 성분 분석
-4. 사용자 피부 프로필 기반 규칙 분석
-5. 피부 규칙 데이터셋 v0.2 확장
-6. 프론트엔드 피부 프로필 및 분석 결과 UI
+FastAPI 백엔드에서는 상품 처리, RAG 검색, 알레르기 분석, 안전성 분석 및 피부 적합성 분석을 각각의 모듈로 분리해 처리합니다.
 
----
+```mermaid
+flowchart LR
+    USER([사용자]) --> FRONTEND["React Frontend"]
+    FRONTEND --> API["FastAPI<br/>main.py"]
 
-## 2. 전체 처리 흐름
+    subgraph SG_SERVICE["서비스 로직"]
+        PRODUCTS["app/products<br/>상품 검색·옵션·전성분 처리"]
+        GRAPH["app/graph<br/>RAG 워크플로우"]
+        ALLERGENS["app/allergens<br/>알레르기 분석"]
+        SAFETY["app/safety<br/>성분 안전성 분석"]
+        SKIN["skin_rules.py<br/>skin_compatibility.py<br/>피부 적합성 분석"]
+    end
+
+    API --> PRODUCTS
+    API --> GRAPH
+    API --> ALLERGENS
+    API --> SAFETY
+    API --> SKIN
+
+    subgraph SG_INFRA["데이터 저장소 및 외부 시스템"]
+        OLIVE["Olive Young"]
+        SQLITE[("SQLite")]
+        CHROMA[("Chroma Vector Store")]
+        GEMINI["Gemini LLM"]
+        LANGSMITH[("LangSmith")]
+    end
+
+    PRODUCTS --> OLIVE
+    PRODUCTS --> SQLITE
+
+    GRAPH --> CHROMA
+    GRAPH --> GEMINI
+    GRAPH -. 실행 추적 .-> LANGSMITH
+```
+
+## 서비스 흐름
+
+사용자는 상품명을 입력해 올리브영 상품을 검색하고, 분석할 상품과 옵션을 선택합니다.
+
+상품의 전성분이 SQLite에 저장되어 있으면 캐시된 데이터를 사용하고, 데이터가 없으면 Playwright를 통해 상품 상세 페이지에서 전성분을 수집합니다.
+
+준비된 전성분은 알레르기, 안전성, 피부 적합성 및 RAG 분석 모듈로 전달되며, 각각의 분석 결과를 통합해 사용자에게 제공합니다.
+
+```mermaid
+flowchart TD
+    USER([사용자]) --> INPUT["React Frontend<br/>상품명 입력"]
+
+    subgraph SG_SEARCH["1. 상품 검색"]
+        SEARCH_API["POST /products/search"]
+        PRODUCT_SEARCH["app/products<br/>올리브영 상품 검색"]
+        PRODUCT_LIST["상품 후보 목록 반환"]
+        SHOW_PRODUCTS["React Frontend<br/>상품 목록 표시"]
+        SELECT_PRODUCT["사용자가 상품 선택"]
+
+        SEARCH_API --> PRODUCT_SEARCH
+        PRODUCT_SEARCH --> PRODUCT_LIST
+        PRODUCT_LIST --> SHOW_PRODUCTS
+        SHOW_PRODUCTS --> SELECT_PRODUCT
+    end
+
+    INPUT --> SEARCH_API
+
+    subgraph SG_SELECT["2. 상품 및 옵션 선택"]
+        SELECT_API["POST /products/select"]
+        PREPARE_PRODUCT["app/products<br/>상품 및 옵션 정보 조회"]
+        HAS_OPTION{"선택 가능한 옵션이 있는가?"}
+        SHOW_OPTIONS["React Frontend<br/>옵션 목록 표시"]
+        SELECT_OPTION["사용자가 옵션 선택"]
+        REQUEST_ANALYSIS["분석 요청"]
+
+        SELECT_API --> PREPARE_PRODUCT
+        PREPARE_PRODUCT --> HAS_OPTION
+
+        HAS_OPTION -- 있음 --> SHOW_OPTIONS
+        SHOW_OPTIONS --> SELECT_OPTION
+        SELECT_OPTION --> REQUEST_ANALYSIS
+
+        HAS_OPTION -- 없음 --> REQUEST_ANALYSIS
+    end
+
+    SELECT_PRODUCT --> SELECT_API
+
+    subgraph SG_INGREDIENT["3. 전성분 조회 및 수집"]
+        CHECK_CACHE{"SQLite에 전성분이 있는가?"}
+        READ_CACHE["캐시된 전성분 조회"]
+        SCRAPE["Playwright<br/>상품 상세 페이지 수집"]
+        PARSE["옵션별 전성분 추출 및 파싱"]
+        SAVE_DB[("SQLite 저장")]
+        PREPARE_INGREDIENT["분석용 전성분 준비"]
+
+        CHECK_CACHE -- 있음 --> READ_CACHE
+        READ_CACHE --> PREPARE_INGREDIENT
+
+        CHECK_CACHE -- 없음 --> SCRAPE
+        SCRAPE --> PARSE
+        PARSE --> SAVE_DB
+        SAVE_DB --> PREPARE_INGREDIENT
+    end
+
+    REQUEST_ANALYSIS --> CHECK_CACHE
+
+    subgraph SG_ANALYSIS["4. 성분 분석"]
+        ALLERGEN["app/allergens<br/>알레르기 분석"]
+        SAFETY_ANALYSIS["app/safety<br/>성분 안전성 분석"]
+        SKIN_ANALYSIS["skin_rules.py<br/>skin_compatibility.py<br/>피부 적합성 분석"]
+        RAG["app/graph<br/>RAG 워크플로우"]
+    end
+
+    PREPARE_INGREDIENT --> ALLERGEN
+    PREPARE_INGREDIENT --> SAFETY_ANALYSIS
+    PREPARE_INGREDIENT --> SKIN_ANALYSIS
+    PREPARE_INGREDIENT --> RAG
+
+    subgraph SG_RAG["5. RAG 문서 검색 및 답변 생성"]
+        RETRIEVER["app/retriever<br/>관련 문서 검색"]
+        CHROMA[("Chroma Vector Store")]
+        LLM["Gemini LLM<br/>분석 결과 생성"]
+        LANGSMITH[("LangSmith")]
+
+        RETRIEVER --> CHROMA
+        CHROMA --> LLM
+        LLM -. 실행 추적 .-> LANGSMITH
+    end
+
+    RAG --> RETRIEVER
+
+    ALLERGEN --> RESULT["ProductAnalysisResult 생성"]
+    SAFETY_ANALYSIS --> RESULT
+    SKIN_ANALYSIS --> RESULT
+    LLM --> RESULT
+
+    RESULT --> SHOW_RESULT["React Frontend<br/>분석 결과 표시"]
+    SHOW_RESULT --> END([사용자에게 분석 결과 제공])
+```
+
+## 기술 스택
+
+### Backend
+
+- Python
+- FastAPI
+- Pydantic
+- SQLAlchemy
+- SQLite
+- Playwright
+
+### RAG 및 AI
+
+- LangChain
+- LangGraph
+- LangSmith
+- Gemini API
+- Chroma
+
+### Frontend
+
+- React
+- TypeScript
+
+## 프로젝트 구조
 
 ```text
-사용자 상품 검색
-→ 상품 선택
-→ 상품 옵션 수집
-→ 옵션별 전성분 추출
-→ 옵션별 전성분 DB 캐시
-→ 사용자 피부 프로필 입력
-→ MFDS 규제 분석
-→ 피부 적합성 규칙 분석
-→ RAG 문서 검색
-→ Gemini 설명 생성
-→ 규제 결과·피부 적합성·출처 반환
+derma-rag/
+├── app/
+│   ├── allergens/                    # 알레르기 유발 성분 분석
+│   ├── graph/                        # LangGraph 워크플로우
+│   ├── products/                     # 상품 검색·전성분·SQLite 파이프라인
+│   ├── safety/                       # 성분 안전성 분석
+│   ├── services/                     # 비즈니스 로직
+│   ├── config.py                     # 환경 설정
+│   ├── database.py                   # SQLite 설정
+│   ├── embeddings.py                 # 임베딩 모델
+│   ├── langsmith_client.py           # LangSmith 설정
+│   ├── main.py                       # FastAPI 진입점
+│   ├── rag_chain.py                  # RAG 응답 생성
+│   ├── retriever.py                  # 문서 검색
+│   ├── schemas.py                    # API 스키마
+│   ├── skin_compatibility.py         # 피부 적합성 분석
+│   ├── skin_rule_schemas.py          # 피부 규칙 스키마
+│   ├── skin_rules.py                 # 피부 타입별 판정 규칙
+│   └── trace_metadata.py             # 추적 메타데이터
+├── data/                             # 성분·규제 데이터
+├── docs/                             # 상세 개발 문서
+├── evals/                            # 평가 코드와 데이터
+├── frontend/                         # React 프론트엔드
+├── scripts/                          # 데이터 처리 스크립트
+├── vectorstore/                      # Chroma 벡터 저장소
+├── .env.example                      # 환경 변수 작성 예시
+└── README.md                         # 프로젝트 전체 소개
 ```
 
-MFDS 규제 분석과 피부 적합성 분석은 LLM의 자유 생성에만 의존하지 않습니다.
+## 상세 개발 문서
 
-정제된 규제 데이터와 결정론적 규칙 엔진을 통해 먼저 구조화된 결과를 만들고, LLM은 검색된 문서와 분석 결과를 바탕으로 사용자에게 설명을 제공합니다.
+프로젝트의 데이터 구축 과정, RAG 파이프라인 설계, LangGraph 전환 과정과 상품 전성분 수집 파이프라인의 상세 구현 내용은 아래 문서에서 확인할 수 있습니다.
 
----
+| 문서 | 주요 내용 |
+|---|---|
+| [식약처 성분·규제 데이터 구축](docs/mfds_regulation.md) | 식약처 화장품 성분·규제 데이터 수집, 정제, 문서 변환 및 벡터 저장소 구축 과정 |
+| [LangChain 기반 RAG 구축](docs/LangChain.md) | 문서 검색, 정확 일치 검색, 중복 제거, 컨텍스트 구성, 프롬프트 생성 및 LLM 응답 생성 과정 |
+| [LangGraph 기반 RAG 워크플로우](docs/LangGraph.md) | 기존 RAG 파이프라인을 상태 기반 그래프로 전환하고 노드와 실행 흐름을 구성한 과정 |
+| [상품 전성분 처리 파이프라인](docs/Product_Ingredient_Pipeline.md) | 올리브영 상품 검색부터 옵션 선택, 전성분 추출·정규화, SQLite 캐싱 및 성분 분석까지의 전체 과정 |
 
-# 3. MFDS 화장품 규제 데이터 구축
+## 실행 방법
 
-## 3.1 도입 배경
-
-기존에는 MFDS 원료 사전을 통해 다음 정보를 검색할 수 있었습니다.
-
-- 한글 성분명
-- 영문 성분명
-- CAS 번호
-- 원료 설명
-
-예시는 다음과 같습니다.
-
-```json
-{
-  "ingredient_kor_name": "탤크",
-  "ingredient_eng_name": "Talc",
-  "cas_no": "14807-96-6",
-  "origin_description": "원료 설명"
-}
-```
-
-하지만 원료 사전만으로는 다음 내용을 판단하기 어려웠습니다.
-
-- 화장품 사용 금지 성분인지
-- 사용 한도가 존재하는지
-- 특정 제품 유형에서만 제한되는지
-- 별도의 사용 조건이나 경고 문구가 있는지
-
-이를 해결하기 위해 MFDS의 화장품 안전기준 관련 규제 정보를 별도로 저장하고 정제했습니다.
-
----
-
-## 3.2 규제 데이터 구조
-
-정제된 규제 데이터는 다음과 같은 정보를 포함합니다.
-
-```text
-성분 한글명
-성분 영문명
-CAS 번호
-대표 화학명
-규제 유형
-규제 분류
-최대 사용 농도
-적용 제품 범위
-사용 조건
-경고 문구
-출처 기관
-출처 문서
-고시 번호
-고시일
-출처 문서 위치
-```
-
-예시 구조는 다음과 같습니다.
-
-```json
-{
-  "ingredient_kor_name": "규제 문서의 성분명",
-  "ingredient_eng_name": null,
-  "cas_no": "14807-96-6",
-  "chemical_name": "탤크",
-  "regulation_type": "prohibited",
-  "category": "prohibited",
-  "max_concentration": null,
-  "product_scope": "all_cosmetics",
-  "use_conditions": "화장품에 사용할 수 없음",
-  "warning_text": null,
-  "source_authority": "MFDS",
-  "source_document": "화장품 안전기준 등에 관한 규정",
-  "notice_number": "2026-19",
-  "notice_date": "2026-03-18",
-  "source_section": "별표 1",
-  "source_row": 969
-}
-```
-
----
-
-## 3.3 원료 사전과 규제 데이터 분리
-
-MFDS 원료 사전과 규제 데이터는 서로 다른 목적으로 사용합니다.
-
-```text
-MFDS 원료 사전
-→ 성분의 이름, 영문명, CAS 번호, 원료 설명 확인
-
-MFDS 규제 데이터
-→ 금지, 제한, 최대 사용량, 제품 범위, 사용 조건 확인
-```
-
-예를 들어 다음 두 표현은 서로 다른 의미를 가집니다.
-
-```text
-일반적인 탤크
-≠
-석면 기준에 적합하지 않은 탤크
-```
-
-규제 데이터에 `석면 기준에 적합하지 않은 탤크`가 금지 대상으로 등록되어 있더라도, 제품 전성분에 `탤크`가 포함됐다는 사실만으로 해당 제품을 규제 위반으로 판정해서는 안 됩니다.
-
-따라서 규제 결과에는 성분명뿐 아니라 다음 정보를 함께 반영합니다.
-
-- 규제 문서의 전체 성분명
-- CAS 번호
-- 규제 조건
-- 적용 제품 범위
-- 규제 유형
-
----
-
-# 4. 상품 옵션별 전성분 분석
-
-## 4.1 도입 배경
-
-색조 화장품은 동일 상품이라도 색상에 따라 전성분이 달라질 수 있습니다.
-
-```text
-17N
-21N
-21P
-22N
-23N
-```
-
-또한 같은 색상에 여러 판매 구성이 존재할 수 있습니다.
-
-```text
-[본품+리필+파우치] 17N
-[본품+리필] 17N
-[본품] 17N
-```
-
-상품 전체에 하나의 전성분만 연결하면 사용자가 실제로 선택한 옵션과 다른 성분을 분석할 수 있습니다.
-
-이를 해결하기 위해 전성분을 다음 단위로 저장하도록 변경했습니다.
-
-```text
-product_id + option_id
-```
-
----
-
-## 4.2 옵션별 전성분 처리 흐름
-
-```text
-상품 검색
-→ 상품 선택
-→ 판매 옵션 수집
-→ 전성분 원문 수집
-→ 옵션 헤더 후보 생성
-→ 원문에서 옵션 헤더 위치 검색
-→ 옵션별 전성분 구간 분리
-→ 성분 목록 정제
-→ option_id 단위 DB 저장
-→ 선택한 옵션의 성분만 분석
-```
-
-주요 모듈은 다음과 같습니다.
-
-```text
-app/products/option_parser.py
-→ 옵션명 정규화, 헤더 탐색, 전성분 구간 분리
-
-app/products/option_service.py
-→ 상품 옵션과 전성분 매핑 결과 조합
-
-app/products/ingredient_cache_service.py
-→ 옵션별 전성분 저장 및 조회
-
-app/products/option_models.py
-→ 상품 옵션 및 캐시 데이터 모델 정의
-```
-
-분석 요청 시에는 실시간으로 전성분을 다시 추출하지 않고, 검증 후 저장된 옵션 캐시를 조회합니다.
-
----
-
-## 4.3 동일 색상 패키지 옵션의 전성분 공유
-
-전성분 원문에는 색상별 헤더가 하나만 존재하지만 상품 옵션에는 같은 색상의 판매 구성이 여러 개 존재할 수 있습니다.
-
-```text
-[본품+리필+파우치] 17N
-[본품+리필] 17N
-```
-
-두 옵션은 서로 다른 `option_id`를 가지지만 실제로는 동일한 `17N` 전성분을 사용합니다.
-
-기존 파서는 두 옵션이 같은 원문 위치를 가리키면 충돌로 판단하여 `ambiguous` 상태로 처리했습니다.
-
-이를 다음 기준으로 수정했습니다.
-
-```text
-original_start와 original_end가 완전히 동일
-→ 정상적인 공유 헤더
-
-일부 영역만 겹치거나 경계가 다름
-→ ambiguous 유지
-```
-
-같은 `(start, end)`를 가진 헤더를 먼저 그룹화하고 다음 값을 한 번만 계산합니다.
-
-- 다음 고유 헤더 위치
-- 전성분 원문 구간
-- 성분 목록
-- 구간 유효성 검사 결과
-
-계산 결과는 동일 헤더를 가리키는 모든 옵션에 공유합니다.
-
-각 옵션의 `option_id`는 그대로 유지되므로 사용자는 판매 구성이 다른 옵션을 각각 선택할 수 있습니다.
-
----
-
-## 4.4 대괄호 구성 문구 제거
-
-상품 옵션에는 전성분 헤더와 관계없는 판매 구성 문구가 포함될 수 있습니다.
-
-```text
-[본품+리필+파우치] 17N
-[블러셔 증정] 17Y
-```
-
-전성분 원문에는 일반적으로 색상코드만 표시되기 때문에 전체 옵션명으로 검색하면 매칭이 실패할 수 있습니다.
-
-헤더 후보 생성 시에만 대괄호와 내부 문구를 제거하도록 처리했습니다.
-
-```text
-[본품+리필+파우치] 17N
-→ 매칭용 문자열: 17N
-```
-
-다음 데이터는 변경하지 않습니다.
-
-- 원본 옵션명
-- `option_id`
-- 내부 옵션 키
-- 프론트엔드 표시 이름
-
-소괄호는 색상 설명일 가능성이 있으므로 무조건 제거하지 않습니다.
-
-```text
-21N (뉴트럴)
-```
-
----
-
-# 5. 피부 프로필 기반 성분 분석
-
-## 5.1 사용자 피부 정보
-
-사용자는 다음 피부 정보를 입력할 수 있습니다.
-
-- 피부 타입
-- 민감성 여부
-- 수분 부족 여부
-- 피부 장벽 상태
-- 피부 고민
-- 개인 알레르기 성분
-- 과거 반응 성분
-
-지원하는 대표 피부 프로필은 다음과 같습니다.
-
-```text
-건성
-지성
-복합성
-수부지
-민감성
-여드름·트러블성
-중성
-```
-
----
-
-## 5.2 분석 결과 수준
-
-피부 적합성 결과는 다음 수준으로 구분합니다.
-
-```text
-high
-→ 개인 알레르기나 과거 반응처럼 우선 확인이 필요한 항목
-
-caution
-→ 해당 피부 조건에서 주의가 필요한 가능성이 있는 항목
-
-reference
-→ 제형, 농도, 사용량에 따라 달라지는 참고 항목
-
-beneficial
-→ 해당 피부 조건에 긍정적으로 작용할 가능성이 있는 항목
-```
-
-성분표만으로 다음 정보는 알 수 없습니다.
-
-- 정확한 성분 농도
-- 완제품 pH
-- 제형
-- 입자 크기
-- 표면 처리
-- 실제 사용량
-- 개인별 반응
-
-따라서 분석 결과는 의료 진단이나 확정적인 안전성 판정으로 사용하지 않습니다.
-
----
-
-## 5.3 백엔드 구성
-
-피부 적합성 기능을 위해 다음 모듈을 구성했습니다.
-
-```text
-app/skin_rule_schemas.py
-→ 피부 규칙과 분석 결과 Pydantic 모델
-
-app/skin_rules.py
-→ 피부 규칙 JSON 데이터셋 로딩
-
-app/skin_compatibility.py
-→ 전성분과 피부 프로필을 비교하는 규칙 평가
-
-app/schemas.py
-→ 요청·응답 피부 프로필 및 분석 결과 필드
-```
-
----
-
-# 6. 피부 규칙 데이터셋 v0.2
-
-## 6.1 v0.1의 한계
-
-초기 `dermarag_skin_rules_v0_1.json`은 총 14개의 시작 규칙으로 구성되어 있었습니다.
-
-주요 규칙은 다음과 같습니다.
-
-- 향료
-- 일부 알레르기 보존제
-- 강한 음이온 계면활성제
-- 휘발성 알코올
-- 습윤제
-- 밀폐제
-- 장벽 보조 성분
-- AHA
-- PHA
-- 살리실릭애씨드
-- 레티노이드
-- 식물 추출물과 에센셜오일
-- 각질 제거 성분 중복
-- 논코메도제닉 제품 표시
-
-그러나 실제 상품 분석에 사용하기에는 다음 문제가 있었습니다.
-
-- 한글 MFDS 표준 성분명 부족
-- INCI 영문명 부족
-- 흔한 표기 변형 부족
-- 보존제와 향 알레르겐의 개별 성분 부족
-- 색조 제품의 분체 성분 부족
-- 피부 프로필이 참조하는 기능 그룹과 실제 규칙 그룹 불일치
-
----
-
-## 6.2 v0.2 확장 결과
-
-기존 규칙을 감사한 뒤 v0.2 데이터셋으로 확장했습니다.
-
-```text
-29개 규칙
-278개 정규화 alias
-7개 피부 프로필
-```
-
-주요 확장 영역은 다음과 같습니다.
-
-- 향료 일반 표시
-- 개별 향 알레르겐
-- 아이소티아졸리논계 보존제
-- 포름알데히드 방출 보존제
-- 파라벤 참고 규칙
-- 강한 음이온 계면활성제
-- 코카미도프로필베타인 개인 반응
-- 휘발성 알코올
-- 지방알코올
-- 습윤제 및 가벼운 습윤제
-- 유연제
-- 밀폐 성분
-- 장벽 보조 지질
-- 진정·완화 성분
-- 나이아신아마이드
-- AHA
-- PHA
-- BHA
-- 레티노이드
-- 개별 에센셜오일
-- 라놀린 개인 반응
-- 탤크
-- 알루미나
-- 실리카
-- 카올린
-- 개인 알레르기
-- 과거 반응 우선 규칙
-- 각질 제거 성분 중복
-
----
-
-## 6.3 지방알코올과 휘발성 알코올 분리
-
-기존 규칙에 단독 `alcohol` alias가 포함되면 다음 성분도 휘발성 알코올로 잘못 분류될 수 있습니다.
-
-```text
-Cetyl Alcohol
-Cetearyl Alcohol
-Stearyl Alcohol
-Behenyl Alcohol
-```
-
-이 성분들은 에탄올과 같은 휘발성 용매가 아니라 주로 유연제, 유화제, 점도 조절제로 사용되는 지방알코올입니다.
-
-v0.2에서는 두 성분군을 분리했습니다.
-
-```text
-휘발성 알코올
-- Alcohol Denat.
-- Ethanol
-- Ethyl Alcohol
-- SD Alcohol 40-B
-- 에탄올
-- 변성알코올
-
-지방알코올
-- Cetyl Alcohol
-- Cetearyl Alcohol
-- Stearyl Alcohol
-- Behenyl Alcohol
-- 세틸알코올
-- 세테아릴알코올
-- 스테아릴알코올
-- 베헤닐알코올
-```
-
-범위가 지나치게 넓은 단독 `alcohol` alias는 사용하지 않습니다.
-
----
-# 7. 보안 및 저장소 관리
-
-## 7.1 스크래핑 데이터의 민감정보 방지
-
-상품 또는 리뷰 데이터 저장 시 다음 정보가 포함되지 않도록 점검합니다.
-
-- 로그인 세션
-- 쿠키
-- Authorization 헤더
-- 개인 식별정보
-- 리뷰 작성자의 개인정보
-- 요청 헤더 전체
-
-테스트 픽스처에는 옵션명과 전성분처럼 기능 검증에 필요한 최소 데이터만 저장합니다.
-
----
-
-## 7.2 분석 결과의 안전성
-
-성분표만으로 다음 정보를 확인할 수 없습니다.
-
-- 정확한 성분 농도
-- 완제품 pH
-- 입자 크기
-- 원료 순도
-- 표면 처리
-- 완제품 제형
-- 실제 사용량
-- 개인별 피부 반응
-
-따라서 다음과 같은 확정적인 표현을 사용하지 않습니다.
-
-```text
-이 성분은 반드시 트러블을 일으킵니다.
-이 제품은 완전히 안전합니다.
-이 성분은 모든 사용자에게 유해합니다.
-```
-
-대신 조건부로 안내합니다.
-
-```text
-민감성 피부에서는 자극 가능성을 참고할 수 있습니다.
-제형과 함량에 따라 영향이 달라질 수 있습니다.
-과거 동일 성분에 반응한 이력이 있다면 우선 확인이 필요합니다.
-```
-
----
-
-# 8. 주요 이슈 및 트러블슈팅
-
-## 8.1 동일 색상 패키지 옵션이 모두 ambiguous 처리된 문제
-
-### 문제
-
-동일한 색상에 여러 판매 구성 옵션이 존재하는 상품에서 일부 옵션만 전성분이 연결되거나 전체 옵션 매칭이 실패했습니다.
-
-### 원인
-
-서로 다른 옵션이 같은 전성분 헤더 위치를 가리키는 상황을 충돌로 판단했습니다.
-
-```text
-[본품+리필+파우치] 17N
-[본품+리필] 17N
-```
-
-두 옵션 모두 같은 `17N` 헤더를 가리키지만 기존 로직에서는 중복 영역으로 처리했습니다.
-
-### 해결
-
-`original_start`와 `original_end`가 완전히 동일하면 정상적인 공유 헤더로 처리했습니다.
-
-일부 영역만 겹치거나 경계가 다른 경우는 기존처럼 `ambiguous` 상태를 유지했습니다.
-
-### 결과
-
-- 올데이 마스터 쿠션 8개 옵션 연결
-- 레이어드핏 쿠션 27개 옵션 연결
-- 동일 색상 구성 옵션의 전성분 공유
-- 서로 다른 `option_id` 유지
-
----
-
-## 8.2 대괄호 판매 구성 문구 때문에 옵션 매칭이 실패한 문제
-
-### 문제
-
-다음과 같은 옵션명이 전성분 원문의 색상 헤더와 연결되지 않았습니다.
-
-```text
-[본품+리필+파우치] 17N
-```
-
-### 원인
-
-판매 구성 문구까지 포함된 전체 옵션명을 헤더 후보로 사용했습니다.
-
-### 해결
-
-헤더 후보를 생성할 때만 `[...]` 블록을 제거했습니다.
-
-```text
-[본품+리필+파우치] 17N
-→ 17N
-```
-
-원본 옵션명과 프론트엔드 표시 이름은 그대로 유지했습니다.
-
----
-
-## 8.3 MFDS 원료 사전과 규제 데이터가 혼동된 문제
-
-### 문제
-
-MFDS 원료 사전에 성분이 존재하면 해당 성분이 규제 또는 피부 주의 성분으로 자동 분석될 것으로 오해할 수 있었습니다.
-
-### 원인
-
-원료 사전, 규제 데이터와 피부 규칙 데이터는 서로 다른 역할을 가집니다.
-
-### 해결
-
-세 데이터 계층의 역할을 분리했습니다.
-
-```text
-MFDS 원료 사전
-→ 성분 기본 정보
-
-MFDS 규제 데이터
-→ 법적 금지·제한·사용 조건
-
-피부 규칙 데이터
-→ 피부 프로필별 조건부 참고
-```
-
----
-
-## 8.4 피부 규칙 v0.1의 낮은 커버리지
-
-### 문제
-
-켄메이크 제품 전성분에는 탤크와 알루미나가 존재했지만 피부 분석 결과에는 표시되지 않았습니다.
-
-### 원인
-
-v0.1은 14개의 시작 규칙만 포함하고 있었으며, 실제 제품에 등장하는 한글명과 INCI alias가 부족했습니다.
-
-### 해결
-
-기존 규칙과 피부 프로필 연결을 감사한 뒤 v0.2로 확장했습니다.
-
-```text
-14개 규칙
-→ 29개 규칙
-
-제한적인 alias
-→ 278개 정규화 alias
-```
-
-탤크, 알루미나, 실리카, 카올린, 지방알코올, 실제 보존제와 향 알레르겐 등을 추가했습니다.
-
----
-
-## 8.5 지방알코올이 휘발성 알코올로 오탐될 가능성
-
-### 문제
-
-`alcohol`이라는 넓은 alias로 인해 다음 성분이 휘발성 알코올로 잘못 분류될 수 있었습니다.
-
-```text
-Cetyl Alcohol
-Cetearyl Alcohol
-Stearyl Alcohol
-```
-
-### 해결
-
-단독 `alcohol` alias를 제거하고 휘발성 알코올과 지방알코올을 서로 다른 규칙으로 분리했습니다.
-
----
-
-# 9. 테스트 및 검증
-
-## 전체 백엔드 테스트
+### Backend
 
 ```bash
-uv run pytest -q
+uv sync
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
-## 프론트엔드 타입 검사 및 빌드
+### Frontend
 
 ```bash
-npx tsc --noEmit
-npm run build
+cd frontend
+npm install
+npm run dev
 ```
-
----
-
-# 10. 현재 구현 상태
-
-현재까지 다음 기능이 구현되었습니다.
-
-- MFDS 원료 데이터 저장 및 검색
-- MFDS 규제 데이터 저장 및 정제
-- 규제 결과 구조화
-- 상품 검색
-- 상품 옵션 수집
-- 옵션별 전성분 분리
-- 동일 색상 패키지 옵션의 전성분 공유
-- 옵션별 전성분 DB 캐시
-- 사용자 피부 프로필 입력
-- 피부 규칙 기반 분석
-- 개인 알레르기 및 과거 반응 입력
-- 프론트엔드 피부 적합성 결과 카드
-- 피부 규칙 데이터셋 v0.2 확장
-- 규칙 데이터 구조 검증
-- 앱의 v0.2 규칙 로딩 연결
-
----
-
-# 11. 남은 작업
-
-- 개인 알레르기와 과거 반응 우선순위 통합 테스트
-- 복수 각질 제거 성분 조합 규칙 검증
-- 제품 메타데이터 기반 논코메도제닉 표시 처리
-- 워시오프와 리브온 제품 구분
-- 규제 데이터 조건부 매칭 정밀도 향상
-- 실제 상품군 기반 회귀 테스트 확대
-- 규칙 데이터 변경 이력 및 버전 관리 체계 구축
-- 기존 상품 캐시 갱신 및 재수집 절차 정리
