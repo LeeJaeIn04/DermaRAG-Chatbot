@@ -86,6 +86,34 @@ def test_mapping_key_removes_only_verified_promotion_prefixes() -> None:
     assert normalize_option_mapping_key("[NEW] 23호 누카다미아") == expected
 
 
+def test_mapping_key_removes_verified_package_and_promotion_tokens() -> None:
+    assert normalize_option_mapping_key("[본품+리필] 17N") == "17n"
+    assert normalize_option_mapping_key("[마블컬렉션] 10호 베어로맨스") == (
+        "10베어로맨스"
+    )
+    assert normalize_option_mapping_key("421호 로즐린 단품") == "421로즐린"
+    # 실제 shade label을 담은 대괄호는 package token으로 지우지 않는다.
+    assert normalize_option_mapping_key("[3C 웨딩피치]") == "3c웨딩피치"
+
+
+def test_package_variants_share_one_canonical_option() -> None:
+    canonical = canonicalize_product_options(
+        [
+            make_product_option("[본품+리필+파우치] 17N"),
+            make_product_option("[본품] 17N"),
+            make_product_option("[기획] 17N"),
+        ]
+    )
+
+    assert len(canonical) == 1
+    assert canonical[0].option_name == "17N"
+    assert canonical[0].source_option_names == [
+        "[본품+리필+파우치] 17N",
+        "[본품] 17N",
+        "[기획] 17N",
+    ]
+
+
 def test_mapping_key_preserves_ho_inside_general_words() -> None:
     assert normalize_option_mapping_key("호호바오일") == "호호바오일"
 
@@ -168,6 +196,116 @@ def test_canonical_groups_do_not_cross_product_collection_calls() -> None:
     assert second[0].source_option_ids == ["second"]
 
 
+# ---------------------------------------------------------------------------
+# Step 2 보완: 빈 정규화 옵션명(mapping_key)에서도 internal_option_key가
+# 유일해야 하고, production/shadow가 같은 canonical_options을 그대로
+# 써서 동일한 id를 얻어야 한다.
+# ---------------------------------------------------------------------------
+
+
+def test_empty_mapping_key_options_get_unique_internal_option_keys() -> (
+    None
+):
+    """'[기획]'/'[단품]'/'[증정]'처럼 promotion 문구만 있는 옵션명은
+    mapping_key가 빈 문자열로 정규화된다(별도 canonical 옵션으로
+    남아야 함). 이런 옵션이 여러 개 있어도 internal_option_key는
+    canonicalize_product_options 안에서 서로 겹치지 않아야 한다."""
+
+    options = [
+        make_product_option("[기획]"),
+        make_product_option("[단품]"),
+        make_product_option("[증정]"),
+    ]
+    assert [
+        normalize_option_mapping_key(option.raw_option_name)
+        for option in options
+    ] == ["", "", ""]
+
+    canonical = canonicalize_product_options(options)
+    assert len(canonical) == 3
+    keys = [option.internal_option_key for option in canonical]
+    assert len(set(keys)) == 3
+
+
+def test_empty_mapping_key_option_prefers_source_option_id_for_key() -> (
+    None
+):
+    """source id가 있으면 그 값을 우선 써서 키를 만들고, 없으면
+    원본 index를 시드로 쓴다 - 둘 다 항상 서로 다른 값을 낸다."""
+
+    with_source_id = canonicalize_product_options(
+        [make_product_option("[기획]", source_option_id="external-1")]
+    )
+    without_source_id = canonicalize_product_options(
+        [make_product_option("[기획]")]
+    )
+    assert (
+        with_source_id[0].internal_option_key
+        != without_source_id[0].internal_option_key
+    )
+
+    # 같은 source id를 쓰면 항상 같은 키가 나온다(결정적).
+    again_with_source_id = canonicalize_product_options(
+        [make_product_option("[기획]", source_option_id="external-1")]
+    )
+    assert (
+        with_source_id[0].internal_option_key
+        == again_with_source_id[0].internal_option_key
+    )
+
+
+def test_duplicate_normalized_names_still_share_one_deterministic_key() -> (
+    None
+):
+    """정규화하면 같은 이름이 되는 옵션들(중복)은 여전히 하나의
+    canonical 옵션으로 병합되고, 그 key는 항상 결정적이다."""
+
+    options = [
+        make_product_option("[기획] 23호 누카다미아"),
+        make_product_option("단품/23 누카다미아"),
+        make_product_option("23호 누카다미아"),
+    ]
+    canonical = canonicalize_product_options(options)
+    assert len(canonical) == 1
+    assert canonical[0].internal_option_key == make_internal_option_key(
+        normalize_option_mapping_key("23호 누카다미아")
+    )
+
+
+def test_production_and_shadow_use_identical_option_id_from_canonicalize() -> (  # noqa: E501
+    None
+):
+    """canonicalize_product_options가 확정한 internal_option_key를
+    production/shadow가 재계산 없이 그대로 쓴다는 것을, 실제
+    parse_option_full_sections/shadow_parse_option_ingredient_sections
+    호출 결과로 직접 확인한다(빈 mapping_key 옵션 포함)."""
+
+    from app.products.option_parser import (
+        parse_option_full_sections,
+        shadow_parse_option_ingredient_sections,
+    )
+
+    options = [
+        make_product_option("19호"),
+        make_product_option("[기획]"),
+    ]
+    canonical = canonicalize_product_options(options)
+    raw_text = "[19호] 정제수, 글리세린, 향료"
+
+    production = parse_option_full_sections(raw_text, canonical)
+    shadow = shadow_parse_option_ingredient_sections(raw_text, canonical)
+
+    canonical_keys = {option.internal_option_key for option in canonical}
+    production_keys = {
+        section.internal_option_key for section in production.sections
+    }
+    shadow_keys = {
+        mapping.internal_option_key for mapping in shadow.mappings
+    }
+    assert production_keys == canonical_keys
+    assert shadow_keys == canonical_keys
+
+
 def test_mapping_normalization_does_not_change_display_name() -> None:
     option = make_product_option("[기획] 23호 누카다미아")
     assert option.option_name == "[기획] 23호 누카다미아"
@@ -237,9 +375,9 @@ def test_bracket_configuration_phrase_is_ignored_for_header_matching() -> None:
         "나이아신아마이드",
         "티타늄디옥사이드",
     ]
-    # 원본 option_name은 그대로 유지된다.
-    assert sections[0].option_name == "[본품+리필+파우치] 17N"
-    assert sections[1].option_name == "[본품+리필] 21P"
+    # 분석용 canonical 표시명에서는 package token만 제거한다.
+    assert sections[0].option_name == "17N"
+    assert sections[1].option_name == "21P"
 
 
 def test_stable_option_keys_are_distinct() -> None:
@@ -290,16 +428,9 @@ def test_identical_span_options_share_the_same_section() -> None:
         ["[본품+리필+파우치] 17N", "[본품+리필] 17N"],
     )
 
-    assert [section.mapping_status for section in sections] == [
-        "matched",
-        "matched",
-    ]
-    assert sections[0].matched_header == sections[1].matched_header == "17N"
-    assert (
-        sections[0].ingredients
-        == sections[1].ingredients
-        == ["정제수", "글리세린", "향료"]
-    )
+    assert [section.mapping_status for section in sections] == ["matched"]
+    assert sections[0].matched_header == "17N"
+    assert sections[0].ingredients == ["정제수", "글리세린", "향료"]
 
 
 def test_partial_overlap_between_different_options_is_ambiguous() -> None:

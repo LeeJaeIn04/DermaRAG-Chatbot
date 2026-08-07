@@ -54,9 +54,11 @@ export interface ProductSelectionResponse {
   can_analyze: boolean;
   option_status:
     | "ready"
+    | "partial"
     | "not_applicable"
     | "unavailable";
   option_error: string | null;
+  collection_status: "ready" | "partial" | "failed" | null;
 }
 
 export interface ProductOption {
@@ -68,6 +70,8 @@ export interface ProductOption {
   image_url: string | null;
   mapping_status: "matched" | "unmatched" | "ambiguous" | "unsupported";
   mapping_confidence: number;
+  status: "ready" | "unmapped" | "empty" | "ambiguous" | "error" | null;
+  analysis_available: boolean;
 }
 
 export interface ProductIngredientRequest {

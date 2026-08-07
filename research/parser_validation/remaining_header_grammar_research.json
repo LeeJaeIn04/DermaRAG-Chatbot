@@ -1,0 +1,268 @@
+{
+  "schema_version": "remaining-header-grammar-research-v1",
+  "collected_at": "2026-08-05T14:47:12+09:00",
+  "research_only": true,
+  "production_parser_modified": false,
+  "api_modified": false,
+  "database_schema_modified": false,
+  "parser_version_modified": false,
+  "contains_full_ingredient_text": false,
+  "products": [
+    {
+      "product_id": "A000000171371",
+      "product_name": "네이밍 플러피 파우더 블러쉬",
+      "evidence": {
+        "existing_v3_result_used": true,
+        "live_collection_status": "browser_verification_blocked",
+        "failure_stage": "ingredient_disclosure_failed",
+        "captcha_or_browser_verification_bypassed": false,
+        "raw_text_retained": false
+      },
+      "document": {
+        "raw_text_length": null,
+        "line_break_present": null,
+        "header_candidate_count": null,
+        "candidate_positions": [],
+        "following_body_lengths": [],
+        "common_formula_possibility": "unknown",
+        "hierarchical_possibility": "unknown"
+      },
+      "canonical_option_count": 22,
+      "parenthesized_english_alias_count": 22,
+      "unique_english_alias_count": 20,
+      "duplicate_aliases": {
+        "BAGEL": 2,
+        "PILLOW": 2
+      },
+      "hash_observation": {
+        "status": "prior_v3_candidate_not_reverified",
+        "reported_candidate_grammar": "hash_english_alias",
+        "confirmed_examples": [],
+        "allowed_character_evidence": {
+          "uppercase": "unconfirmed",
+          "lowercase": "unconfirmed",
+          "digits": "unconfirmed",
+          "spaces": "unconfirmed",
+          "hyphens": "unconfirmed",
+          "parentheses": "unconfirmed",
+          "korean": "unconfirmed"
+        },
+        "section_boundary_confirmed": false,
+        "marketing_hash_collision_checked": false
+      },
+      "grammar": "hash_english_alias_candidate",
+      "semantic_role": "canonical_option_header_candidate",
+      "confidence": "low",
+      "policy": "research_only",
+      "reason": "원문 재검증이 브라우저 검증 화면에서 중단됐고 BAGEL/PILLOW alias가 canonical 옵션 간 중복되어 전체 안전 조건을 충족하지 못함",
+      "production_candidate_added_matches": 0,
+      "conditional_unique_alias_matches": 18,
+      "conditional_ambiguous_options": 4,
+      "remaining_unmatched_after_production_candidates": 22
+    },
+    {
+      "product_id": "A000000241210",
+      "product_name": "롬앤 더 쥬시 래스팅 틴트",
+      "evidence": {
+        "live_collection_status": "collected_once",
+        "metadata_match_status": "complete_match_reordered",
+        "legacy_v1_cache_used_for_section_identity_cross_check": true,
+        "raw_text_retained": false
+      },
+      "document": {
+        "raw_text_length": 25174,
+        "line_break_present": false,
+        "comma_count": 1847,
+        "header_candidate_count": 36,
+        "header_prefix": "stable_product_title_then_full_numeric_color_label",
+        "observed_label_positions": [20, 707, 1410, 2139, 2848, 3532, 4240, 4925],
+        "observed_following_spans": [
+          {"label": "01 포멜로스킨", "label_span": [20, 28], "next_label_start": 707},
+          {"label": "02 누카다미아", "label_span": [707, 715], "next_label_start": 1410},
+          {"label": "03 베어 그레이프", "label_span": [1410, 1420], "next_label_start": 2139},
+          {"label": "04 피그피그", "label_span": [2139, 2146], "next_label_start": 2848},
+          {"label": "05 쥬쥬브", "label_span": [2848, 2854], "next_label_start": 3532},
+          {"label": "06 필링앵두", "label_span": [3532, 3539], "next_label_start": 4240},
+          {"label": "07 체리밤", "label_span": [4240, 4246], "next_label_start": 4925}
+        ],
+        "all_candidate_positions_retained": false,
+        "position_retention_reason": "전체 원문을 저장하지 않는 연구 제한에 따라 live 분석 중 대표 위치만 보존",
+        "body_looks_like_ingredient_list": true,
+        "common_formula_possibility": "rejected_by_repeated_distinct_full_formulas",
+        "hierarchical_possibility": "low"
+      },
+      "canonical_option_count": 38,
+      "document_section_count": 36,
+      "exact_sale_option_section_count": 34,
+      "duplicate_header_count": 0,
+      "orphan_sections": ["12 애플브라운", "36 키튼리치"],
+      "unmatched_sale_options_after_exact_rule": [
+        "39 미스티 피치",
+        "40 베이지 그레이프",
+        "41 소이아몬드",
+        "42 소이 피그"
+      ],
+      "malformed_candidates": [],
+      "grammar": "product_title_prefixed_repeated_full_option_label",
+      "semantic_role": "canonical_option_header",
+      "confidence": "high",
+      "policy": "production_candidate",
+      "production_candidate_added_matches": 34,
+      "remaining_unmatched_after_production_candidates": 4
+    },
+    {
+      "product_id": "A000000197231",
+      "product_name": "롬앤 글래스팅 컬러 글로스",
+      "evidence": {
+        "live_collection_status": "collected_once",
+        "metadata_match_status": "complete_match_reordered",
+        "raw_text_retained": false
+      },
+      "document": {
+        "raw_text_length": 3206,
+        "line_break_present": false,
+        "header_candidate_count": 17,
+        "header_prefix": "full_numeric_color_label_without_product_title",
+        "candidates": [
+          {"label": "01 피오니 발레", "span": [0, 9], "following_body_length": 163, "exact_sale_option": true},
+          {"label": "02 너티 베이그", "span": [172, 181], "following_body_length": 169, "exact_sale_option": true},
+          {"label": "03 로즈 핀치", "span": [350, 358], "following_body_length": 169, "exact_sale_option": true},
+          {"label": "04 그레이피 웨이", "span": [527, 537], "following_body_length": 157, "exact_sale_option": true},
+          {"label": "05 딤 모브", "span": [694, 700], "following_body_length": 163, "exact_sale_option": true},
+          {"label": "06 디픈 무어", "span": [863, 871], "following_body_length": 163, "exact_sale_option": true},
+          {"label": "07 스프링 피버", "span": [1034, 1043], "following_body_length": 190, "exact_sale_option": true},
+          {"label": "08 체리 업", "span": [1233, 1240], "following_body_length": 187, "exact_sale_option": true},
+          {"label": "12 크림 쉘", "span": [1427, 1433], "following_body_length": 209, "exact_sale_option": true},
+          {"label": "13 구아바크림", "span": [1642, 1650], "following_body_length": 174, "exact_sale_option": true},
+          {"label": "19 조이 베리", "span": [1824, 1832], "following_body_length": 173, "exact_sale_option": true},
+          {"label": "20 클라우디 민트", "span": [2005, 2015], "following_body_length": 150, "exact_sale_option": false},
+          {"label": "21 토피 크림", "span": [2165, 2173], "following_body_length": 188, "exact_sale_option": true},
+          {"label": "22 크림 머드", "span": [2361, 2369], "following_body_length": 199, "exact_sale_option": true},
+          {"label": "23 크림 헤이즈", "span": [2568, 2577], "following_body_length": 207, "exact_sale_option": true},
+          {"label": "24 크림 베베", "span": [2784, 2792], "following_body_length": 200, "exact_sale_option": true},
+          {"label": "25 크림 빈즈", "span": [2992, 3000], "following_body_length": 206, "exact_sale_option": true}
+        ],
+        "body_looks_like_ingredient_list": true,
+        "common_formula_possibility": "rejected_by_repeated_distinct_full_formulas",
+        "hierarchical_possibility": "low"
+      },
+      "canonical_option_count": 18,
+      "document_section_count": 17,
+      "exact_sale_option_section_count": 16,
+      "duplicate_header_count": 0,
+      "orphan_sections": ["20 클라우디 민트"],
+      "unmatched_sale_options_after_exact_rule": ["14 뮤이지", "20 클라우드민트"],
+      "malformed_candidates": [],
+      "grammar": "repeated_unbracketed_full_option_label",
+      "semantic_role": "canonical_option_header",
+      "confidence": "high",
+      "policy": "production_candidate",
+      "production_candidate_added_matches": 16,
+      "remaining_unmatched_after_production_candidates": 2
+    },
+    {
+      "product_id": "A000000177984",
+      "product_name": "헤라 센슈얼 누드 글로스",
+      "evidence": {
+        "existing_research_artifact_used": "research/ingredient_documents/A000000177984.json",
+        "live_recollection_performed": false,
+        "extractor_reads_dom_inner_text_and_only_strips_outer_whitespace": true
+      },
+      "document": {
+        "raw_text_length": 1859,
+        "line_break_present": false,
+        "header_candidate_count": 6,
+        "candidates": [
+          {"raw_header": "[란제리]", "span": [0, 5], "following_body_length": 320, "status": "valid"},
+          {"raw_header": "[스피치리스]", "span": [327, 334], "following_body_length": 290, "status": "valid"},
+          {"raw_header": "[누디스트)", "span": [626, 632], "following_body_length": 290, "status": "malformed"},
+          {"raw_header": "[플러티]", "span": [924, 929], "following_body_length": 304, "status": "valid"},
+          {"raw_header": "[체리쉬]", "span": [1235, 1240], "following_body_length": 318, "status": "valid"},
+          {"raw_header": "[이노센트]", "span": [1560, 1566], "following_body_length": 292, "status": "valid"}
+        ],
+        "other_malformed_bracket_count": 0,
+        "common_formula_possibility": "low",
+        "hierarchical_possibility": "low"
+      },
+      "canonical_option_count": 19,
+      "nudist_canonical_identity_count": 1,
+      "malformed_candidate": {
+        "raw_header": "[누디스트)",
+        "classification": "safe_single_bracket_repair_candidate",
+        "body_comma_count": 25,
+        "body_looks_like_ingredient_list": true,
+        "next_normal_header_start": 924,
+        "repair_would_yield_candidate_count": 1,
+        "extraction_artifact_evidence": false
+      },
+      "grammar": "single_mismatched_bracket",
+      "semantic_role": "canonical_option_header_candidate",
+      "confidence": "high",
+      "policy": "research_only",
+      "reason": "이 문서에서는 안전 후보지만 단일 표본만으로 일반 bracket 자동 보정을 production 규칙으로 확장하지 않음",
+      "production_candidate_added_matches": 0,
+      "conditional_repair_added_matches": 1,
+      "remaining_unmatched_after_production_candidates": 14
+    }
+  ],
+  "cross_product_conclusions": {
+    "romand_grammar_relationship": "partially_same",
+    "romand_shared_family": "repeated_unbracketed_full_option_label",
+    "romand_difference": "틴트는 반복 상품명 prefix 뒤에 full label, 글로스는 full label이 곧바로 section 시작",
+    "common_formula_products": [],
+    "production_candidate_rules": [
+      {
+        "grammar": "repeated_unbracketed_full_option_label",
+        "requirements": [
+          "숫자와 색상명을 포함한 full canonical label exact match",
+          "문서와 판매 옵션에서 각각 유일",
+          "둘 이상의 반복 section",
+          "각 다음 boundary 전 유효한 ingredient body",
+          "상품명 prefix가 반복되면 prefix 시작을 header boundary에 포함",
+          "모든 후보를 structure guard에 먼저 전달"
+        ],
+        "expected_added_matches": 50
+      }
+    ],
+    "research_only_rules": [
+      "hash_english_alias",
+      "single_mismatched_bracket_repair"
+    ],
+    "rejected_rules": [
+      "numeric_only_header",
+      "korean_english_semantic_similarity",
+      "fuzzy_color_name_match",
+      "automatic_spelling_repair",
+      "generic_bracket_repair",
+      "common_formula_replication"
+    ],
+    "projection": {
+      "current_unmatched_options_across_four_products": 92,
+      "production_candidate_added_matches": 50,
+      "remaining_unmatched": 42,
+      "products_becoming_ready": 0,
+      "conditional_future_hash_unique_alias_matches": 18,
+      "conditional_future_bracket_repair_matches": 1
+    }
+  },
+  "v3_regression_risk": {
+    "ready_products": {
+      "product_ids": ["A000000251851", "A000000226593", "A000000174064"],
+      "hash_english_vs_hash_alphanumeric": "low_if_separate_and_alias_exact",
+      "full_label_rule": "low",
+      "numeric_only_rule": "high_and_rejected",
+      "malformed_repair": "not_applied"
+    },
+    "hierarchical_products": {
+      "product_ids": ["A000000180532", "A000000150361", "A000000258200", "A000000145650"],
+      "false_ready_risk": "medium_without_structure_guard_ordering",
+      "required_guard": "새 unbracketed 후보를 포함한 전체 header inventory로 계층형 판정을 먼저 완료하고 그 뒤 flat mapping을 허용"
+    }
+  },
+  "artifacts": [
+    "research/parser_validation/remaining_header_grammar_research.md",
+    "research/parser_validation/remaining_header_grammar_research.json",
+    "scripts/fixtures/research_remaining_header_grammars.json",
+    "scripts/research_remaining_header_grammars.py"
+  ]
+}

@@ -4,6 +4,10 @@ import type {
   ProductCandidate,
   ProductOption,
 } from "../../types/product";
+import {
+  isOptionAnalyzable,
+  selectDefaultAnalyzableOption,
+} from "../../utils/products";
 
 interface ProductOptionSelectorProps {
   content: string;
@@ -23,24 +27,29 @@ export function ProductOptionSelector({
   canSelect,
   onAnalyze,
 }: ProductOptionSelectorProps) {
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  // 기본 선택은 목록의 첫 옵션이 아니라 첫 번째 분석 가능(ready)
+  // 옵션이다. 분석 가능한 옵션이 없으면 선택 없음으로 시작한다.
+  const [selectedKey, setSelectedKey] = useState<string | null>(
+    () => selectDefaultAnalyzableOption(options)?.internal_option_key ?? null,
+  );
   const selectedOption =
     options.find(
       (option) => option.internal_option_key === selectedKey,
     ) || null;
+  const analyzableCount = options.filter(isOptionAnalyzable).length;
 
   return (
     <section className="option-selector-card">
       <header>
         <p>{content}</p>
-        <span>{options.length}개 옵션 분석 가능</span>
+        <span>{analyzableCount}개 옵션 분석 가능</span>
       </header>
 
       <div className="option-grid" role="listbox" aria-label="상품 옵션">
         {options.map((option) => {
           const selected =
             option.internal_option_key === selectedKey;
-          const available = option.mapping_status === "matched";
+          const available = isOptionAnalyzable(option);
 
           return (
             <button
@@ -63,7 +72,7 @@ export function ProductOptionSelector({
               </span>
               <span className="option-name">{option.option_name}</span>
               <span className="option-availability">
-                {available ? "분석 가능" : "전성분 매칭 불가"}
+                {available ? "분석 가능" : "분석 불가"}
               </span>
               {selected && (
                 <i aria-hidden="true">

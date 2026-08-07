@@ -172,10 +172,19 @@ class ProductSelectionResponse(BaseModel):
     can_analyze: bool = True
     option_status: Literal[
         "ready",
+        "partial",
         "not_applicable",
         "unavailable",
     ] = "not_applicable"
     option_error: str | None = None
+    # Step 4: Step 1 CollectionStatus(ready/partial/failed)를 그대로
+    # 노출한다. option_status는 기존 UI 분기값을 그대로 유지하고,
+    # collection_status는 추가 정보로만 쓴다.
+    collection_status: Literal[
+        "ready",
+        "partial",
+        "failed",
+    ] | None = None
 
 class ProductIngredientRequest(BaseModel):
     """

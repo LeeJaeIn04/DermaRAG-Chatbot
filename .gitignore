@@ -71,7 +71,7 @@ vectorstore/
 # 평가 데이터셋 (스크립트로 재생성)
 # ==========================================================================
 evals/
-
+research/ingredient_documents/A*.json
 # ==========================================================================
 # 프론트엔드 빌드 산출물 및 의존성
 # ==========================================================================
@@ -100,15 +100,18 @@ inspect_mfds_allergen_pdf.py
 # MFDS 원본 문서
 data/allergens/mfds/raw/*.pdf
 data/regulations/mfds/raw/*.hwpx
+
 # SQLite runtime files
 *.db-shm
 *.db-wal
 data/*.db
 data/*.db-shm
 data/*.db-wal
+
 # Playwright
 playwright-report/
 test-results/
+
 # Node
 frontend/node_modules/
 frontend/dist/

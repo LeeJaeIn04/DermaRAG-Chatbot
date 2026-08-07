@@ -1,0 +1,172 @@
+{
+  "schema_version": "sanitized_header_first_option_full_sections_v1",
+  "contains_full_research_raw_text": false,
+  "cases": [
+    {
+      "name": "foundation_full_sections_with_orphan",
+      "options": [
+        "[AD][단품] 3C 웨딩피치",
+        "[AD][단품] 13N 뉴트럴포슬린"
+      ],
+      "raw_sections": [
+        "[3C 웨딩피치] 정제수, 글리세린, 적색산화철",
+        "[13N 뉴트럴포슬린] 정제수, 글리세린, 황색산화철",
+        "[기존 21호 아이보리] 정제수, 글리세린, 흑색산화철"
+      ],
+      "expected_statuses": ["matched", "matched"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": ["[기존 21호 아이보리]"],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0
+    },
+    {
+      "name": "number_header_and_package_canonical_share",
+      "options": [
+        "09 쉬어 누드",
+        "[메탈홀더기획] 09 쉬어 누드",
+        "14 피치 블룸"
+      ],
+      "raw_sections": [
+        "[9호] 마이카, 실리카, 적색산화철",
+        "[12호] 마이카, 실리카, 황색산화철"
+      ],
+      "expected_statuses": ["matched", "unmatched"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": ["[12호]"],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0
+    },
+    {
+      "name": "malformed_lip_header",
+      "options": ["401호 누디스트", "102호 플러티"],
+      "raw_sections": [
+        "[누디스트) 오일, 왁스, 적색산화철",
+        "[플러티] 오일, 왁스, 적색201호"
+      ],
+      "expected_statuses": ["unmatched", "matched"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": [],
+      "expected_malformed_header_count": 1,
+      "expected_ambiguous_header_count": 0
+    },
+    {
+      "name": "duplicate_header_is_ambiguous",
+      "options": ["01 샤이닝 린넨"],
+      "raw_sections": [
+        "[1호] 마이카, 실리카, 적색산화철",
+        "[1호] 마이카, 실리카, 황색산화철"
+      ],
+      "expected_statuses": ["ambiguous"],
+      "expected_canonical_count": 1,
+      "expected_orphan_headers": [],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 2
+    },
+    {
+      "name": "star_colon_exact_without_typo_repair",
+      "options": ["[본품+리필] 페어라이트", "[본품+리필] 엔라이트"],
+      "raw_sections": [
+        "★ 페어라이트 : 정제수, 글리세린, 적색산화철",
+        "★ N라이트 : 정제수, 글리세린, 황색산화철"
+      ],
+      "expected_statuses": ["matched", "unmatched"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": ["★ N라이트 :"],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0,
+      "expected_document_format": "option_full_sections"
+    },
+    {
+      "name": "palette_bilingual_nested_headers",
+      "options": ["코스모스", "새턴 베이지"],
+      "raw_sections": [
+        "[코스모스] 소프트 레이 Soft Ray 마이카, 실리카, 적색산화철 라일락 플래시 Lilac Flash 마이카, 실리카, 황색산화철",
+        "[새턴 베이지] 문 샌드 Moon Sand 마이카, 실리카, 적색산화철 바닐라 샌드 Vanilla Sand 마이카, 실리카, 황색산화철"
+      ],
+      "expected_statuses": ["unsupported", "unsupported"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": [
+        "소프트 레이 Soft Ray",
+        "라일락 플래시 Lilac Flash",
+        "문 샌드 Moon Sand",
+        "바닐라 샌드 Vanilla Sand"
+      ],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0,
+      "expected_document_format": "hierarchical_option_internal_sections"
+    },
+    {
+      "name": "palette_bracketed_nested_headers",
+      "options": ["01 데일리", "02 생기"],
+      "raw_sections": [
+        "[01 데일리] [시스루] 마이카, 실리카, 적색산화철 [스너그] 마이카, 실리카, 황색산화철",
+        "[02 생기] [피치] 마이카, 실리카, 적색산화철 [코랄] 마이카, 실리카, 황색산화철"
+      ],
+      "expected_statuses": ["unsupported", "unsupported"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": ["[시스루]", "[스너그]", "[피치]", "[코랄]"],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0,
+      "expected_document_format": "hierarchical_option_internal_sections"
+    },
+    {
+      "name": "shading_unbracketed_top_headers",
+      "options": ["1 클래식", "2 모던"],
+      "raw_sections": [
+        "1호 클래식 [왼쪽] 마이카, 실리카, 적색산화철 [오른쪽] 마이카, 실리카, 황색산화철",
+        "2호 모던 [왼쪽] 마이카, 실리카, 적색산화철 [오른쪽] 마이카, 실리카, 황색산화철"
+      ],
+      "expected_statuses": ["unsupported", "unsupported"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": ["[왼쪽]", "[오른쪽]", "[왼쪽]", "[오른쪽]"],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0,
+      "expected_document_format": "hierarchical_option_internal_sections"
+    },
+    {
+      "name": "flat_many_bracketed_option_headers",
+      "options": ["01 로즈", "02 피치", "03 베이지"],
+      "raw_sections": [
+        "[01 로즈] 정제수, 글리세린, 적색산화철",
+        "[02 피치] 정제수, 글리세린, 황색산화철",
+        "[03 베이지] 정제수, 글리세린, 흑색산화철"
+      ],
+      "expected_statuses": ["matched", "matched", "matched"],
+      "expected_canonical_count": 3,
+      "expected_orphan_headers": [],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0,
+      "expected_document_format": "option_full_sections"
+    },
+    {
+      "name": "flat_sections_with_trailing_orphans",
+      "options": ["01 로즈", "02 피치"],
+      "raw_sections": [
+        "[01 로즈] 정제수, 글리세린, 적색산화철",
+        "[02 피치] 정제수, 글리세린, 황색산화철",
+        "[기존 색상] 정제수, 글리세린, 흑색산화철",
+        "[증정품] 오일, 왁스, 적색산화철"
+      ],
+      "expected_statuses": ["matched", "matched"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": ["[기존 색상]", "[증정품]"],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0,
+      "expected_document_format": "option_full_sections"
+    },
+    {
+      "name": "repeated_single_nested_header_needs_review",
+      "options": ["01 로즈", "02 피치"],
+      "raw_sections": [
+        "[01 로즈] [공통 팬] 마이카, 실리카, 적색산화철",
+        "[02 피치] [공통 팬] 마이카, 실리카, 황색산화철"
+      ],
+      "expected_statuses": ["unsupported", "unsupported"],
+      "expected_canonical_count": 2,
+      "expected_orphan_headers": ["[공통 팬]", "[공통 팬]"],
+      "expected_malformed_header_count": 0,
+      "expected_ambiguous_header_count": 0,
+      "expected_document_format": "needs_review"
+    }
+  ]
+}

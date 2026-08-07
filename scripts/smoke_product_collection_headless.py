@@ -30,7 +30,7 @@ def main() -> int:
 
     if args.query:
         provider = OliveYoungProductSearchProvider(
-            headless=False,
+            headless=True,
             timeout_ms=settings.product_playwright_timeout_ms,
             deadline_ms=settings.product_playwright_deadline_ms,
             max_attempts=min(settings.product_playwright_max_attempts, 2),
@@ -57,14 +57,14 @@ def main() -> int:
             product_url=args.url,
         )
     ingredient_extractor = OliveYoungIngredientExtractor(
-        headless=False,
+        headless=True,
         timeout_ms=settings.product_playwright_timeout_ms,
         deadline_ms=settings.product_playwright_deadline_ms,
         max_attempts=min(settings.product_playwright_max_attempts, 2),
     )
     option_extractor = OliveYoungProductOptionExtractor(
         ingredient_extractor=ingredient_extractor,
-        headless=False,
+        headless=True,
         timeout_ms=settings.product_playwright_timeout_ms,
         deadline_ms=settings.product_playwright_deadline_ms,
         max_attempts=min(settings.product_playwright_max_attempts, 2),

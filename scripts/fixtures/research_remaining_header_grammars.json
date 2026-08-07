@@ -1,0 +1,87 @@
+{
+  "schema_version": "remaining-header-grammar-research-fixture-v1",
+  "production_fixture": false,
+  "contains_full_ingredient_text": false,
+  "cases": [
+    {
+      "case_id": "naming_hash_alias_uniqueness_guard",
+      "product_id": "A000000171371",
+      "evidence_status": "prior_v3_candidate_not_reverified_due_browser_verification",
+      "canonical_options": [
+        "[Best] 헤일로(HALO)",
+        "[Best] 베이글 (BAGEL)",
+        "베이글(BAGEL)"
+      ],
+      "sanitized_text": "#HALO 정제수, 글리세린 #BAGEL 정제수, 실리카",
+      "document_labels": ["#HALO", "#BAGEL"],
+      "expected_section_boundary": "current hash header end to next hash header start",
+      "expected_mapping": "HALO unique; BAGEL ambiguous across two canonical options",
+      "expected_mapping_statuses": ["matched", "ambiguous"],
+      "expected_unmatched": 0,
+      "expected_orphan": 0,
+      "expected_malformed": 0,
+      "grammar": "hash_english_alias",
+      "semantic_role": "canonical_option_header_candidate",
+      "confidence": "low",
+      "policy": "research_only"
+    },
+    {
+      "case_id": "romand_tint_product_prefixed_full_labels",
+      "product_id": "A000000241210",
+      "evidence_status": "sanitized_from_live_document_and_legacy_cache_cross_check",
+      "canonical_options": ["01 포멜로스킨", "02 누카다미아"],
+      "sanitized_text": "롬앤 더 쥬시 래스팅 틴트 3.5g 01 포멜로스킨 정제수, 옥틸도데칸올, 변성알코올 롬앤 더 쥬시 래스팅 틴트 02 누카다미아 정제수, 옥틸도데칸올, 폴리솔베이트60 12 애플브라운 정제수, 변성알코올, 글리세린",
+      "document_labels": ["01 포멜로스킨", "02 누카다미아", "12 애플브라운"],
+      "expected_section_boundary": "full option label end to next full option label start",
+      "expected_mapping": "two exact mappings and one orphan past section",
+      "expected_mapping_statuses": ["matched", "matched", "orphan"],
+      "expected_unmatched": 0,
+      "expected_orphan": 1,
+      "expected_malformed": 0,
+      "grammar": "repeated_unbracketed_full_option_label",
+      "semantic_role": "canonical_option_header",
+      "confidence": "high",
+      "policy": "production_candidate"
+    },
+    {
+      "case_id": "romand_gloss_full_labels_with_identity_difference",
+      "product_id": "A000000197231",
+      "evidence_status": "sanitized_from_live_document",
+      "canonical_options": [
+        "01피오니발레",
+        "02 너티 베이그",
+        "20 클라우드민트"
+      ],
+      "sanitized_text": "01 피오니 발레 하이드로제네이티드폴리아이소부텐, 다이아이소스테아릴말레이트, 호호바씨오일 02 너티 베이그 하이드로제네이티드폴리아이소부텐, 합성왁스, 페녹시에탄올 20 클라우디 민트 하이드로제네이티드폴리아이소부텐, 황색4호, 청색1호",
+      "document_labels": ["01 피오니 발레", "02 너티 베이그", "20 클라우디 민트"],
+      "expected_section_boundary": "full option label end to next full option label start",
+      "expected_mapping": "two exact mappings; spelling-different label remains orphan",
+      "expected_mapping_statuses": ["matched", "matched", "orphan"],
+      "expected_unmatched": 1,
+      "expected_orphan": 1,
+      "expected_malformed": 0,
+      "grammar": "repeated_unbracketed_full_option_label",
+      "semantic_role": "canonical_option_header",
+      "confidence": "high",
+      "policy": "production_candidate"
+    },
+    {
+      "case_id": "hera_single_mismatched_bracket",
+      "product_id": "A000000177984",
+      "evidence_status": "sanitized_from_existing_research_artifact",
+      "canonical_options": ["401 누디스트"],
+      "sanitized_text": "[누디스트) 다이펜타에리스리틸펜타아이소스테아레이트, 폴리글리세릴-10데카아이소스테아레이트, 하이드로제네이티드폴리아이소부텐",
+      "document_labels": ["[누디스트)"],
+      "expected_section_boundary": "malformed candidate end to next explicit header start",
+      "expected_mapping": "one repair candidate, no automatic mapping",
+      "expected_mapping_statuses": ["repair_candidate"],
+      "expected_unmatched": 1,
+      "expected_orphan": 0,
+      "expected_malformed": 1,
+      "grammar": "single_mismatched_bracket",
+      "semantic_role": "canonical_option_header_candidate",
+      "confidence": "high",
+      "policy": "research_only"
+    }
+  ]
+}

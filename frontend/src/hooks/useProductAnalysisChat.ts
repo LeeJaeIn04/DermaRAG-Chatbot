@@ -31,6 +31,7 @@ import type {
 import {
   createProductSearchQuery,
   getProductAnalysisEligibility,
+  isOptionAnalyzable,
 } from "../utils/products";
 import {
   buildSkinAnalysisFields,
@@ -417,7 +418,7 @@ export function useProductAnalysisChat(
     (product: ProductCandidate, option: ProductOption) => {
       if (
         flowState !== "waiting_for_option_selection" ||
-        option.mapping_status !== "matched" ||
+        !isOptionAnalyzable(option) ||
         !acquireAnalysisLock(busyRef)
       ) {
         return;

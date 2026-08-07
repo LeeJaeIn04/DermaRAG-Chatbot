@@ -12,6 +12,7 @@ from app.products.repositories import (
     ProductCollectionEntry,
 )
 from app.products.option_parser import (
+    PARSER_VERSION,
     canonicalize_product_options,
     make_product_option,
 )
@@ -503,6 +504,53 @@ def test_legacy_duplicate_option_cache_is_not_reused_as_complete() -> None:
     assert service.get_cached_preparation(make_product()) is None
 
 
+def test_false_ready_previous_parser_version_cache_is_not_reused() -> None:
+    for stale_version in (
+        "option-sections-v2-header-first",
+        "option-sections-v3-structure-guard",
+    ):
+        class PreviousParserRepository(FakeRepository):
+            def get_cached_preparation(self, **kwargs):
+                return CachedProductPreparation(
+                    status="ready",
+                    options=(
+                        CachedProductOption(
+                            option_id="old-parser-option",
+                            option_name="19호",
+                            raw_option_name="19호",
+                        ),
+                    ),
+                    parser_version=stale_version,
+                )
+
+        service = ProductIngredientCacheService(
+            repository=PreviousParserRepository(),
+            extractor=FakeExtractor(make_success_result()),
+            clock=lambda: FIXED_NOW,
+        )
+
+        assert service.get_cached_preparation(make_product()) is None
+
+
+def test_optionless_cache_is_reused_across_option_parser_versions() -> None:
+    class OptionlessRepository(FakeRepository):
+        def get_cached_preparation(self, **kwargs):
+            return CachedProductPreparation(
+                status="not_applicable",
+                parser_version="option-sections-v1",
+            )
+
+    service = ProductIngredientCacheService(
+        repository=OptionlessRepository(),
+        extractor=FakeExtractor(make_success_result()),
+        clock=lambda: FIXED_NOW,
+    )
+
+    cached = service.get_cached_preparation(make_product())
+    assert cached is not None
+    assert cached.status == "not_applicable"
+
+
 def test_selected_option_reads_only_its_cache() -> None:
     repository = FakeRepository(
         cached=make_cached_result(
@@ -548,6 +596,81 @@ def test_missing_selected_option_never_extracts_common_ingredients() -> None:
 
     assert extractor.call_count == 0
     assert repository.save_calls == 0
+
+
+def test_stale_false_ready_option_cache_cannot_be_analyzed_directly() -> None:
+    for stale_version in (
+        "option-sections-v2-header-first",
+        "option-sections-v3-structure-guard",
+    ):
+        class StaleOptionRepository(FakeRepository):
+            def get_cached_preparation(self, **kwargs):
+                return CachedProductPreparation(
+                    status="ready",
+                    parser_version=stale_version,
+                    options=(
+                        CachedProductOption(
+                            option_id="stale-option",
+                            option_name="코스모스",
+                            raw_option_name="코스모스",
+                        ),
+                    ),
+                )
+
+        repository = StaleOptionRepository(
+            cached=make_cached_result(
+                expires_at=FIXED_NOW + timedelta(days=1),
+                option_id="stale-option",
+            )
+        )
+        service = ProductIngredientCacheService(
+            repository=repository,
+            extractor=FakeExtractor(make_success_result()),
+            clock=lambda: FIXED_NOW,
+        )
+
+        try:
+            service.get_cached_option(make_product(), "stale-option")
+        except ValueError as error:
+            assert "현재 parser cache가 유효하지 않습니다" in str(error)
+        else:
+            raise AssertionError("stale option cache를 차단해야 합니다.")
+
+
+def test_current_ready_option_cache_can_be_analyzed() -> None:
+    class CurrentOptionRepository(FakeRepository):
+        def get_cached_preparation(self, **kwargs):
+            return CachedProductPreparation(
+                status="ready",
+                parser_version=PARSER_VERSION,
+                options=(
+                    CachedProductOption(
+                        option_id="current-option",
+                        option_name="3C 웨딩피치",
+                        raw_option_name="3C 웨딩피치",
+                    ),
+                ),
+            )
+
+    repository = CurrentOptionRepository(
+        cached=make_cached_result(
+            expires_at=FIXED_NOW + timedelta(days=1),
+            option_id="current-option",
+        )
+    )
+    service = ProductIngredientCacheService(
+        repository=repository,
+        extractor=FakeExtractor(make_success_result()),
+        clock=lambda: FIXED_NOW,
+    )
+
+    resolution = service.get_cached_option(
+        make_product(),
+        "current-option",
+    )
+
+    assert resolution.cache_hit is True
+    assert resolution.result.ingredients
 
 
 def test_rejects_invalid_ttl() -> None:

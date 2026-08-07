@@ -1,0 +1,11 @@
+{
+  "schema_version": "sanitized_shadow_wakemake_lip_trailing_description_v1",
+  "contains_full_research_raw_text": false,
+  "product_id": "A000000226241",
+  "note": "각 옵션 section 전성분 목록 뒤에 상품 설명성 bracket 문구(이미지-실제 색상 차이 안내 등)가 comma로 분리되어 붙는 '후행 상품 설명 구조'를 sanitize한 fixture. 실제 값이 아닌 대표 성분/문구로 치환했다.",
+  "options": [
+    "19호 쉘 피치",
+    "20호 플레저"
+  ],
+  "raw_text": "[19호 쉘 피치] 다이아이소스테아릴말레이트, 트라이메틸실록시실리케이트, 폴리부텐, 향료, [본품 이미지와 실제 색상 차이가 있을 수 있습니다], 향료\n[20호 플레저] 다이아이소스테아릴말레이트, 트라이메틸실록시실리케이트, 향료, [실제 색상과 다를 수 있습니다]"
+}

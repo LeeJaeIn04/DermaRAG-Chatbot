@@ -19,9 +19,11 @@ from app.products.option_models import (
     ProductOptionPreparationResult,
 )
 from app.products.option_parser import (
+    PARSER_VERSION,
     normalize_option_label,
     normalize_option_mapping_key,
 )
+from app.products.parser_state import ParserResult
 from app.products.errors import ProductDataUnavailableError
 
 
@@ -31,6 +33,21 @@ def _option_storage_metadata(option: ProductOption) -> dict[str, object]:
     metadata = option.model_dump(mode="json")
     metadata["source_option_names"] = list(option.source_option_names)
     metadata["source_option_ids"] = list(option.source_option_ids)
+    metadata.update(
+        {
+            "product_id": option.product_id,
+            "option_number": option.option_number,
+            "standard_code": option.standard_code,
+            "normalized_option_name": option.normalized_option_name,
+            "availability": option.availability,
+            "sold_out_flag": option.sold_out_flag,
+            "dom_disabled": option.dom_disabled,
+            "sort_order": option.sort_order,
+            "representative": option.representative,
+            "group_path": list(option.group_path),
+            "combination_option_flag": option.combination_option_flag,
+        }
+    )
     return metadata
 
 
@@ -92,6 +109,7 @@ class ProductIngredientCacheService:
         clock: Callable[[], datetime] | None = None,
         cache_only_mode: bool = False,
         live_collection_enabled: bool = True,
+        option_level_cache_enabled: bool = False,
     ) -> None:
         if ttl_days <= 0:
             raise ValueError(
@@ -104,6 +122,9 @@ class ProductIngredientCacheService:
         self.clock = clock or utc_now
         self.cache_only_mode = cache_only_mode
         self.live_collection_enabled = live_collection_enabled
+        # Step 3: false면 신규 option-level cache read/write를 전혀
+        # 시도하지 않는다 - repository에도 값을 넘기지 않는다.
+        self.option_level_cache_enabled = option_level_cache_enabled
         self._extraction_locks = KeyedLockPool()
 
     def ensure_live_collection_allowed(self) -> None:
@@ -254,8 +275,15 @@ class ProductIngredientCacheService:
             source=product.source,
             external_product_id=product.product_id,
             now=self._normalize_datetime(self.clock()),
+            prefer_option_cache=self.option_level_cache_enabled,
         )
         if cached is None:
+            return None
+        if (
+            cached.status in ("ready", "partial")
+            and cached.parser_version is not None
+            and cached.parser_version != PARSER_VERSION
+        ):
             return None
         if cached.status == "not_applicable":
             return ProductOptionPreparationResult(
@@ -263,6 +291,11 @@ class ProductIngredientCacheService:
                 can_analyze=True,
                 status="not_applicable",
             )
+        if cached.status not in ("ready", "partial"):
+            # failed 등은 여전히 cache miss로 처리해 기존 live 수집
+            # 흐름으로 넘긴다 - 완전 실패를 캐시로 서빙하지 않는
+            # 기존 정책은 그대로 유지한다.
+            return None
         options = [
             ProductOption(
                 internal_option_key=option.option_id,
@@ -274,10 +307,27 @@ class ProductIngredientCacheService:
                     or normalize_option_label(option.option_name)
                 ),
                 image_url=option.image_url,
-                mapping_status="matched",
-                mapping_confidence=1.0,
+                mapping_status=(
+                    "matched" if option.status == "ready" else "unmatched"
+                ),
+                mapping_confidence=(
+                    1.0 if option.status == "ready" else 0.0
+                ),
                 source_option_names=list(option.source_option_names),
                 source_option_ids=list(option.source_option_ids),
+                product_id=option.product_id,
+                option_number=option.option_number,
+                standard_code=option.standard_code,
+                normalized_option_name=option.normalized_option_name,
+                availability=option.availability,
+                sold_out_flag=option.sold_out_flag,
+                dom_disabled=option.dom_disabled,
+                sort_order=option.sort_order,
+                representative=option.representative,
+                group_path=list(option.group_path),
+                combination_option_flag=option.combination_option_flag,
+                status=option.status,
+                analysis_available=(option.status == "ready"),
             )
             for option in cached.options
         ]
@@ -296,7 +346,8 @@ class ProductIngredientCacheService:
             requires_option_selection=True,
             options=options,
             can_analyze=True,
-            status="ready",
+            status="ready" if cached.status == "ready" else "mapping_failed",
+            collection_status=cached.status,
         )
 
     def mark_collection_complete(
@@ -332,8 +383,15 @@ class ProductIngredientCacheService:
         status: str,
         options: list[ProductOption],
         parser_version: str,
+        production_parser_result: ParserResult | None = None,
     ) -> None:
-        """상품 단위 전성분과 완료 상태를 원자적으로 저장한다."""
+        """상품 단위 전성분과 완료 상태를 원자적으로 저장한다.
+
+        production_parser_result는 flag가 켜져 있을 때만 그대로
+        repository에 전달한다 - flag가 꺼져 있으면 호출부가 값을
+        넘기더라도 여기서 버려 새 컬럼에 아무것도 쓰지 않는다
+        (기존 legacy 저장만 동작).
+        """
 
         now = self._normalize_datetime(self.clock())
         self.repository.save_collection(
@@ -346,6 +404,47 @@ class ProductIngredientCacheService:
             ],
             expires_at=now + timedelta(days=self.ttl_days),
             parser_version=parser_version,
+            production_parser_result=(
+                production_parser_result
+                if self.option_level_cache_enabled
+                else None
+            ),
+        )
+
+    def store_option_cache_snapshot(
+        self,
+        product: ProductCandidate,
+        *,
+        production_parser_result: ParserResult,
+        parser_version: str,
+    ) -> None:
+        """Step 3 option-level cache 전용 저장(partial 등 legacy
+        save_collection() 조건을 만족하지 못하는 경우). flag가
+        꺼져 있으면 아무것도 하지 않는다.
+
+        production_parser_result.source는 "production" 또는
+        "shadow"만 허용한다. "shadow"는 Step 6에서 selector가 실제로
+        선택한 결과만 이 경로로 들어온다는 것을 option_service.py의
+        호출 지점이 보장한다(선택되지 않은 raw shadow는 애초에 이
+        메서드를 호출하지 않는다) - 이 계층은 provenance(source
+        값)를 relabel하지 않고 그대로 보존해서 저장한다.
+        """
+
+        if not self.option_level_cache_enabled:
+            return
+        if production_parser_result.source not in ("production", "shadow"):
+            return
+        snapshot_saver = getattr(
+            self.repository, "save_option_cache_snapshot", None
+        )
+        if snapshot_saver is None:
+            return
+        now = self._normalize_datetime(self.clock())
+        snapshot_saver(
+            product,
+            parser_result=production_parser_result,
+            parser_version=parser_version,
+            expires_at=now + timedelta(days=self.ttl_days),
         )
 
     def get_cached_option(
@@ -362,6 +461,33 @@ class ProductIngredientCacheService:
             )
 
         now = self._normalize_datetime(self.clock())
+        preparation_getter = getattr(
+            self.repository,
+            "get_cached_preparation",
+            None,
+        )
+        if preparation_getter is not None:
+            preparation = self.get_cached_preparation(product)
+            # Step 4: 전체 preparation.status가 아니라 옵션 하나하나의
+            # analysis_available로 판단한다 - partial cache에서도
+            # ready인 옵션은 분석을 허용해야 하기 때문이다.
+            option_by_key = {
+                option.internal_option_key: option
+                for option in (preparation.options if preparation else [])
+            }
+            target_option = option_by_key.get(normalized_key)
+            if (
+                preparation is None
+                or target_option is None
+                or not target_option.analysis_available
+            ):
+                if self.cache_only_mode or not self.live_collection_enabled:
+                    raise ProductDataUnavailableError()
+                raise ValueError(
+                    "선택한 옵션의 현재 parser cache가 유효하지 않습니다. "
+                    "상품을 다시 선택해 옵션을 수집해 주세요."
+                )
+
         cached = self.repository.get_cached_ingredients(
             source=product.source,
             external_product_id=product.product_id,

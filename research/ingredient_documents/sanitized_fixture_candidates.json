@@ -1,0 +1,1492 @@
+{
+  "schema_version": "ingredient_document_sanitized_fixture_candidates_v1",
+  "safety": {
+    "contains_full_html": false,
+    "contains_cookies": false,
+    "contains_storage_state": false,
+    "contains_full_ingredient_text": false
+  },
+  "products": [
+    {
+      "product_id": "A000000180532",
+      "category": "아이섀도 팔레트",
+      "ingredient_document_hash": "4c2c3c4c48146f88bd3802266796f79432f93ddb58f9213c8fbac247a3871e67",
+      "ingredient_raw_text_length": 70584,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "[재입고]29 소이 핑크 블러링",
+          "option_number": "061",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 4
+        },
+        {
+          "raw_option_name": "[재입고] ]30호 클래시 누드 블러링",
+          "option_number": "065",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 5
+        },
+        {
+          "raw_option_name": "02 생기 블러링",
+          "option_number": "006",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 21
+        },
+        {
+          "raw_option_name": "[쿄카 PICK]03 선셋 블러링",
+          "option_number": "005",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 22
+        },
+        {
+          "raw_option_name": "04 라벤더 블러링",
+          "option_number": "004",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 23
+        },
+        {
+          "raw_option_name": "05 뮤트 코랄 블러링",
+          "option_number": "003",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 24
+        },
+        {
+          "raw_option_name": "08 캔디 코랄 블러링",
+          "option_number": "008",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 25
+        },
+        {
+          "raw_option_name": "10 레이지 핑크 블러링",
+          "option_number": "017",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 26
+        },
+        {
+          "raw_option_name": "20 탠저린 비치 블러링",
+          "option_number": "037",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 29
+        },
+        {
+          "raw_option_name": "[기획]21 폴 인 피그 블러링",
+          "option_number": "039",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 30
+        },
+        {
+          "raw_option_name": "21 폴 인 피그 블러링",
+          "option_number": "045",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 31
+        },
+        {
+          "raw_option_name": "22 멜로우 어텀 블러링",
+          "option_number": "054",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 32
+        },
+        {
+          "raw_option_name": "26 뮤트로즈블러링",
+          "option_number": "051",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 34
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "[02호 생기 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[03호 선셋 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[04호 라벤더 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[05호 뮤트 코랄 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[08호 캔디 코랄 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[10호 레이지 핑크 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[20 탠저린 비치 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[21 폴 인 피그 블러링(단품/기획)]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 18,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[22 멜로우 어텀 블러링(단품/기획)]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[25 헬시 코랄 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 16,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[26 뮤트 로즈 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 17,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[29 소이 핑크 블러링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 19,
+          "confidence": "high"
+        }
+      ],
+      "expected_document_formats": [
+        "hierarchical_option_internal_sections",
+        "multi_internal_color_group",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [
+        "30 클래시 누드 블러링"
+      ],
+      "expected_orphan_document_sections": [
+        "25 헬시 코랄 블러링"
+      ]
+    },
+    {
+      "product_id": "A000000150361",
+      "category": "아이섀도 팔레트",
+      "ingredient_document_hash": "e875811c2fe86a50a6998486fc1d0b69faff930cfdf542148b994a4af22086ef",
+      "ingredient_raw_text_length": 62129,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "[NEW 기획] 폴인오트",
+          "option_number": "073",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 1
+        },
+        {
+          "raw_option_name": "[단품] 유자 시트러스 티",
+          "option_number": "068",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 4
+        },
+        {
+          "raw_option_name": "[단품] 시나몬 롤",
+          "option_number": "070",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 5
+        },
+        {
+          "raw_option_name": "[단품] 14 클래식 포터리",
+          "option_number": "019",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 6
+        },
+        {
+          "raw_option_name": "[단품] 13 얼모스트 그레이프",
+          "option_number": "016",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 7
+        },
+        {
+          "raw_option_name": "[단품] 12 폴인오트",
+          "option_number": "013",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 8
+        },
+        {
+          "raw_option_name": "[단품] 11 레터프롬스프링",
+          "option_number": "012",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 9
+        },
+        {
+          "raw_option_name": "[단품] 10 픽 더 로즈",
+          "option_number": "009",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 10
+        },
+        {
+          "raw_option_name": "[단품] 08 쉘온더비치",
+          "option_number": "008",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 12
+        },
+        {
+          "raw_option_name": "[단품] 07 쉘인더씨",
+          "option_number": "007",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 13
+        },
+        {
+          "raw_option_name": "[단품] 06 버튼업",
+          "option_number": "006",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 14
+        },
+        {
+          "raw_option_name": "[단품] 05 닛니트",
+          "option_number": "005",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 15
+        },
+        {
+          "raw_option_name": "[단품] 03 핑크올로지",
+          "option_number": "003",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 17
+        },
+        {
+          "raw_option_name": "[단품] 02 무니",
+          "option_number": "002",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 18
+        },
+        {
+          "raw_option_name": "[기획] 유자 시트러스 티",
+          "option_number": "069",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 2
+        },
+        {
+          "raw_option_name": "[기획] 시나몬 롤",
+          "option_number": "071",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 2
+        },
+        {
+          "raw_option_name": "[기획] 11 레터 프롬 스프링",
+          "option_number": "018",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 3
+        },
+        {
+          "raw_option_name": "[단품] 01 데이지",
+          "option_number": "001",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 19
+        },
+        {
+          "raw_option_name": "[한정] 로지 클레이(피스 밤)",
+          "option_number": "041",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 32
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "[01 데이지]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[02 무니]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[03 핑크올로지]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "low"
+        },
+        {
+          "raw_header": "[04 앙버터]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "low"
+        },
+        {
+          "raw_header": "[05 닛니트]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[06버튼업]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[07 쉘인더씨]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[08 쉘온더비치]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[09 타로리더]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[10 픽 더 로즈]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[11 레터프롬스프링]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[12. 폴인오트]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "low"
+        },
+        {
+          "raw_header": "[13 얼모스트 그레이프]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "low"
+        },
+        {
+          "raw_header": "[#클래식 포터리]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "low"
+        },
+        {
+          "raw_header": "[유즈 시트러스 티]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "low"
+        },
+        {
+          "raw_header": "[시나몬 롤]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 9,
+          "confidence": "low"
+        },
+        {
+          "raw_header": "[로지 클레이]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "medium"
+        }
+      ],
+      "expected_document_formats": [
+        "hierarchical_option_internal_sections",
+        "multi_internal_color_group",
+        "formula_type_sections",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [
+        "유자 시트러스 티 (문서에는 유즈 시트러스 티로 표기)"
+      ],
+      "expected_orphan_document_sections": [
+        "04 앙버터",
+        "09 타로리더"
+      ]
+    },
+    {
+      "product_id": "A000000258200",
+      "category": "아이섀도 팔레트",
+      "ingredient_document_hash": "258fb55bb2cc8e772e35d031f1f20df2aa5dbbb43e1fc59fb38a93e4162e6a97",
+      "ingredient_raw_text_length": 8654,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "00 코스모스",
+          "option_number": "001",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 1
+        },
+        {
+          "raw_option_name": "01 새턴 베이지 바이 뮤",
+          "option_number": "002",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 1
+        },
+        {
+          "raw_option_name": "02 머큐리 그레이 바이 뮤",
+          "option_number": "003",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 1
+        },
+        {
+          "raw_option_name": "03 비너스 핑크 바이 뮤",
+          "option_number": "004",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 1
+        },
+        {
+          "raw_option_name": "04 주피터 피치",
+          "option_number": "005",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 1
+        },
+        {
+          "raw_option_name": "05 플루토 베리",
+          "option_number": "006",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 1
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "[코스모스]",
+          "grammar_type": "bracketed_color_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 6,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[새턴 베이지 바이 뮤]",
+          "grammar_type": "bracketed_color_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 6,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[머큐리 그레이 바이 뮤]",
+          "grammar_type": "bracketed_color_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 6,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[비너스 핑크 바이 뮤]",
+          "grammar_type": "bracketed_color_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 6,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[주피터 피치]",
+          "grammar_type": "bracketed_color_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 6,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[플루토 베리]",
+          "grammar_type": "bracketed_color_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 6,
+          "confidence": "high"
+        }
+      ],
+      "expected_document_formats": [
+        "hierarchical_option_internal_sections",
+        "multi_internal_color_group",
+        "internal_color_sections",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [],
+      "expected_orphan_document_sections": []
+    },
+    {
+      "product_id": "A000000145650",
+      "category": "쉐딩·컨투어",
+      "ingredient_document_hash": "598e2767bc659561a3e3ec243c6e065a6a2fa4994654ed50462a6fe3f8dded6d",
+      "ingredient_raw_text_length": 2375,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "[투명용기] 3 쿨 토프",
+          "option_number": "033",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 2
+        },
+        {
+          "raw_option_name": "[투명용기] 2 모던",
+          "option_number": "031",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 3
+        },
+        {
+          "raw_option_name": "[투명용기] 1.5 뉴트럴",
+          "option_number": "030",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 4
+        },
+        {
+          "raw_option_name": "[투명용기] 1 클래식",
+          "option_number": "032",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 5
+        },
+        {
+          "raw_option_name": "1 클래식",
+          "option_number": "003",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 6
+        },
+        {
+          "raw_option_name": "1.5 뉴트럴",
+          "option_number": "016",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 7
+        },
+        {
+          "raw_option_name": "[듀라이트스틱기획] 3 쿨 토프",
+          "option_number": "037",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": null,
+          "sort_order": 99
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "1호 클래식",
+          "grammar_type": "unbracketed_number_ho_tone_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 3,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "2호 모던",
+          "grammar_type": "unbracketed_number_ho_tone_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 3,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "1.5호 뉴트럴",
+          "grammar_type": "unbracketed_number_ho_tone_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 3,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "3호 쿨토프",
+          "grammar_type": "unbracketed_number_ho_tone_name",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 3,
+          "confidence": "high"
+        }
+      ],
+      "expected_document_formats": [
+        "hierarchical_option_internal_sections",
+        "multi_internal_color_group",
+        "internal_color_sections",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [],
+      "expected_orphan_document_sections": []
+    },
+    {
+      "product_id": "A000000163378",
+      "category": "쿠션",
+      "ingredient_document_hash": "a373baafc3dc95669853c6eb7c4bdec5709bbfbfdbb8be44dfdff0012d074a48",
+      "ingredient_raw_text_length": 2622,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "[본품+리필]페어라이트",
+          "option_number": "004",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 5
+        },
+        {
+          "raw_option_name": "[본품+리필]엔라이트",
+          "option_number": "001",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 6
+        },
+        {
+          "raw_option_name": "[본품+리필]라이트",
+          "option_number": "003",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 7
+        },
+        {
+          "raw_option_name": "[본품+리필]미디엄",
+          "option_number": "002",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 8
+        },
+        {
+          "raw_option_name": "[본품+리필]미디엄 딥",
+          "option_number": "011",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": null,
+          "sort_order": 9
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "★ 페어라이트 :",
+          "grammar_type": "star_color_name_colon",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "★ N라이트 :",
+          "grammar_type": "star_color_name_colon",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "medium"
+        },
+        {
+          "raw_header": "★ 라이트 :",
+          "grammar_type": "star_color_name_colon",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "★ 미디엄 :",
+          "grammar_type": "star_color_name_colon",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        }
+      ],
+      "expected_document_formats": [
+        "option_full_sections",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [
+        "엔라이트 (N라이트와 표기 불일치)",
+        "미디엄 딥"
+      ],
+      "expected_orphan_document_sections": []
+    },
+    {
+      "product_id": "A000000174064",
+      "category": "파운데이션",
+      "ingredient_document_hash": "ee1a6a2d485d9feb060184b59a97920b2fddf12196e2d4b33318675fdcc1c059",
+      "ingredient_raw_text_length": 8843,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "[AD][단품] 3C 웨딩피치",
+          "option_number": "014",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 41
+        },
+        {
+          "raw_option_name": "[AD][단품] 13N 뉴트럴포슬린",
+          "option_number": "015",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 42
+        },
+        {
+          "raw_option_name": "[AD][단품] 20C 쿨바닐라",
+          "option_number": "023",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 43
+        },
+        {
+          "raw_option_name": "[AD][단품] 21N 뉴트럴아이보리",
+          "option_number": "022",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 44
+        },
+        {
+          "raw_option_name": "[AD][단품] 21C 쿨아이보리",
+          "option_number": "021",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 45
+        },
+        {
+          "raw_option_name": "[AD][단품] 22N 뉴트럴페탈",
+          "option_number": "020",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 46
+        },
+        {
+          "raw_option_name": "[AD][단품] 22C 쿨페탈",
+          "option_number": "019",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 47
+        },
+        {
+          "raw_option_name": "[AD][단품] 23N 뉴트럴베이지",
+          "option_number": "018",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 48
+        },
+        {
+          "raw_option_name": "[AD][단품] 23C 쿨베이지",
+          "option_number": "017",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 49
+        },
+        {
+          "raw_option_name": "[AD][단품] 25N 뉴트럴탠",
+          "option_number": "016",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 50
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "[3C 웨딩피치]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[13N 뉴트럴포슬린]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[20C 쿨바닐라]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[21N 뉴트럴아이보리]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[21C 쿨아이보리]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[22N 뉴트럴페탈]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[22C 쿨페탈]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[23N 뉴트럴베이지]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[23C 쿨베이지]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[25N 뉴트럴탠]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[기존 21호 아이보리]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[기획증정 - 스틱파데 20호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[기획증정 - 스틱파데 21호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[기획증정 - 스틱파데 22호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "component_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        }
+      ],
+      "expected_document_formats": [
+        "option_full_sections",
+        "component_sections",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [],
+      "expected_orphan_document_sections": [
+        "기존 21호 아이보리",
+        "기획증정 - 스틱파데 20호",
+        "기획증정 - 스틱파데 21호",
+        "기획증정 - 스틱파데 22호"
+      ]
+    },
+    {
+      "product_id": "A000000177984",
+      "category": "립",
+      "ingredient_document_hash": "7fd3a53a23834b90a2425571c5f41c00b31c4a32a14872c4eb76a5c51fc95d82",
+      "ingredient_raw_text_length": 1859,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "[단독/립세럼+투명 브로우 기획] 조지아",
+          "option_number": "034",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 1
+        },
+        {
+          "raw_option_name": "[단독/립세럼+투명 브로우 기획] 로즐린",
+          "option_number": "036",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 3
+        },
+        {
+          "raw_option_name": "[립세럼+투명 브로우 기획] 란제리",
+          "option_number": "035",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 4
+        },
+        {
+          "raw_option_name": "[마블컬렉션] 10호 베어로맨스",
+          "option_number": "042",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 5
+        },
+        {
+          "raw_option_name": "[마블컬렉션] 133호 로지체리",
+          "option_number": "043",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 6
+        },
+        {
+          "raw_option_name": "[마블컬렉션] 410호 세레나데",
+          "option_number": "044",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 7
+        },
+        {
+          "raw_option_name": "[NEW] 325호 선키스드",
+          "option_number": "041",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 8
+        },
+        {
+          "raw_option_name": "[올영단독] 421호 로즐린 단품",
+          "option_number": "033",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 9
+        },
+        {
+          "raw_option_name": "380호 체리쉬",
+          "option_number": "010",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 11
+        },
+        {
+          "raw_option_name": "415호 브라우니보이",
+          "option_number": "026",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 12
+        },
+        {
+          "raw_option_name": "462호 스피치리스",
+          "option_number": "003",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 13
+        },
+        {
+          "raw_option_name": "422호 란제리 단품",
+          "option_number": "004",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 14
+        },
+        {
+          "raw_option_name": "401호 누디스트",
+          "option_number": "007",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 15
+        },
+        {
+          "raw_option_name": "102호 플러티",
+          "option_number": "008",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 16
+        },
+        {
+          "raw_option_name": "18호 이노센트",
+          "option_number": "009",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 17
+        },
+        {
+          "raw_option_name": "390호 웻베리",
+          "option_number": "022",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 18
+        },
+        {
+          "raw_option_name": "418호 허니드",
+          "option_number": "023",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 19
+        },
+        {
+          "raw_option_name": "470호 체리콕",
+          "option_number": "024",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 20
+        },
+        {
+          "raw_option_name": "[단독/립컨실러+립트리트먼트] 조지아",
+          "option_number": "032",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 2
+        },
+        {
+          "raw_option_name": "[올영단독] 200호 조지아 단품",
+          "option_number": "025",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 10
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "[란제리]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[스피치리스]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[누디스트)",
+          "grammar_type": "mismatched_bracket_parenthesis",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "medium"
+        },
+        {
+          "raw_header": "[플러티]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[체리쉬]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[이노센트]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        }
+      ],
+      "expected_document_formats": [
+        "option_full_sections",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [
+        "조지아",
+        "로즐린",
+        "베어로맨스",
+        "로지체리",
+        "세레나데",
+        "선키스드",
+        "브라우니보이",
+        "웻베리",
+        "허니드",
+        "체리콕",
+        "기타 현재 판매 canonical shade"
+      ],
+      "expected_orphan_document_sections": []
+    },
+    {
+      "product_id": "A000000120656",
+      "category": "단색 아이섀도우",
+      "ingredient_document_hash": "a837d20b52d82bf06a2ab89fa05096af454627e9d107b21fd4fe6f607fc67785",
+      "ingredient_raw_text_length": 2634,
+      "minimal_option_rows": [
+        {
+          "raw_option_name": "[아이프라이머기획] 21 스위티 베일",
+          "option_number": "041",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 4
+        },
+        {
+          "raw_option_name": "01 샤이닝 린넨",
+          "option_number": "001",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 5
+        },
+        {
+          "raw_option_name": "02 로지 듀",
+          "option_number": "005",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 6
+        },
+        {
+          "raw_option_name": "08 센티드 부케",
+          "option_number": "007",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 8
+        },
+        {
+          "raw_option_name": "09 쉬어 누드",
+          "option_number": "009",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 9
+        },
+        {
+          "raw_option_name": "11 듀 베이지",
+          "option_number": "013",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 11
+        },
+        {
+          "raw_option_name": "14 피치 블룸",
+          "option_number": "019",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 14
+        },
+        {
+          "raw_option_name": "15 피오니 티",
+          "option_number": "020",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 15
+        },
+        {
+          "raw_option_name": "16 밀키 로즈",
+          "option_number": "030",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 16
+        },
+        {
+          "raw_option_name": "18 프로스티 라벤더",
+          "option_number": "028",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 18
+        },
+        {
+          "raw_option_name": "19 베베 핑크",
+          "option_number": "035",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 19
+        },
+        {
+          "raw_option_name": "20 미스티 그린",
+          "option_number": "036",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 20
+        },
+        {
+          "raw_option_name": "21 스위티 베일",
+          "option_number": "037",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 21
+        },
+        {
+          "raw_option_name": "22 허밍 글로우",
+          "option_number": "048",
+          "availability": "available",
+          "sold_out_flag": false,
+          "dom_disabled": false,
+          "sort_order": 22
+        },
+        {
+          "raw_option_name": "[메탈홀더기획] 09 쉬어 누드",
+          "option_number": "045",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 2
+        },
+        {
+          "raw_option_name": "[메탈홀더기획] 15 피오니 티",
+          "option_number": "046",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 2
+        },
+        {
+          "raw_option_name": "[메탈홀더기획] 22 허밍 글로우",
+          "option_number": "047",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 2
+        },
+        {
+          "raw_option_name": "[아이프라이머기획] 20 미스티 그린",
+          "option_number": "040",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 3
+        },
+        {
+          "raw_option_name": "07 뮤티드 토프",
+          "option_number": "006",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 7
+        },
+        {
+          "raw_option_name": "10 클래시 휘그",
+          "option_number": "008",
+          "availability": "temporarily_sold_out",
+          "sold_out_flag": true,
+          "dom_disabled": true,
+          "sort_order": 10
+        }
+      ],
+      "header_expectations": [
+        {
+          "raw_header": "[1호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[2호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[7호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[8호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[9호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[10호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[11호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[12호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        },
+        {
+          "raw_header": "[13호]",
+          "grammar_type": "bracketed",
+          "semantic_role": "canonical_option_header",
+          "internal_section_count": 0,
+          "confidence": "high"
+        }
+      ],
+      "expected_document_formats": [
+        "option_full_sections",
+        "needs_review"
+      ],
+      "expected_unmatched_sale_options": [
+        "14 피치 블룸",
+        "15 피오니 티",
+        "16 밀키 로즈",
+        "18 프로스티 라벤더",
+        "19 베베 핑크",
+        "20 미스티 그린",
+        "21 스위티 베일",
+        "22 허밍 글로우"
+      ],
+      "expected_orphan_document_sections": [
+        "12호",
+        "13호"
+      ]
+    }
+  ]
+}

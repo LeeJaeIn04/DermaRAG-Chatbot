@@ -262,6 +262,30 @@ class ProductCollectionState(Base):
         DateTime(timezone=False), nullable=False
     )
 
+    # --- Step 3: SQLite option-level cache (additive, nullable) ---
+    # 기존 status/parser_version/options_json은 legacy 판정에 그대로
+    # 쓰이므로 건드리지 않는다. 아래 컬럼은 production ParserResult
+    # (Step 1)만 원자적으로 저장하는 새 경로 전용이며, feature flag가
+    # 꺼져 있거나 값이 채워지지 않으면 legacy 판정으로 그대로
+    # fallback한다. "parser_version"이라는 이름은 이미 위에서 쓰고
+    # 있어 option_cache_ 접두어로 구분한다.
+    option_cache_collection_status: Mapped[str | None] = mapped_column(
+        String(20), nullable=True
+    )
+    option_cache_parser_version: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )
+    option_cache_diagnostics_json: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
+    # legacy option_count는 "매핑에 성공한 옵션 수"라서 partial일 때는
+    # option-level cache가 실제로 담고 있는 옵션 수와 다르다. 신규
+    # reader의 완전성 판정은 이 값만 쓴다(legacy option_count와
+    # 절대 혼용하지 않는다).
+    option_cache_option_count: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
+
     product: Mapped[ProductRecord] = relationship(
         back_populates="collection_state"
     )
@@ -367,6 +391,24 @@ class ProductIngredientRecord(Base):
 
     product: Mapped[ProductRecord] = relationship(
         back_populates="ingredient_records",
+    )
+
+    # --- Step 3: SQLite option-level cache (additive, nullable) ---
+    # 옵션 하나에 대한 production ParserResult의 Step 1 상태만
+    # 저장한다(OptionParseStatus: ready/unmapped/empty/ambiguous/
+    # error). shadow가 selector에서 선택되어도 이 컬럼에는 절대
+    # shadow 값을 쓰지 않는다.
+    option_cache_status: Mapped[str | None] = mapped_column(
+        String(20), nullable=True
+    )
+    option_cache_mapped_section_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )
+    option_cache_parser_version: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )
+    option_cache_diagnostics_json: Mapped[str | None] = mapped_column(
+        Text, nullable=True
     )
 
     # 원문에서 분리한 개별 성분 목록

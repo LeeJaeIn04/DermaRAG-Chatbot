@@ -147,3 +147,114 @@ def test_ready_response_exposes_one_canonical_option_without_internal_sources(
     assert "source_option_names" not in options[0]
     assert "source_option_ids" not in options[0]
     assert "ambiguous" not in response.text
+
+
+def test_ready_response_with_collection_status_exposes_option_status(
+    monkeypatch,
+) -> None:
+    """Step 4: collection_status=ready일 때도 옵션별 status/
+    analysis_available이 응답에 노출된다."""
+
+    canonical = make_product_option(
+        "19호", source_option_id="19"
+    ).model_copy(
+        update={
+            "mapping_status": "matched",
+            "status": "ready",
+            "analysis_available": True,
+        }
+    )
+    monkeypatch.setattr(
+        main.product_option_service,
+        "prepare_product",
+        lambda _product: ProductOptionPreparationResult(
+            requires_option_selection=True,
+            options=[canonical],
+            can_analyze=True,
+            status="ready",
+            collection_status="ready",
+        ),
+    )
+    response = TestClient(main.app).post(
+        "/products/select",
+        json=selection_payload(),
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["collection_status"] == "ready"
+    assert body["option_status"] == "ready"
+    assert body["options"][0]["status"] == "ready"
+    assert body["options"][0]["analysis_available"] is True
+
+
+def test_partial_response_exposes_ready_and_non_ready_options(
+    monkeypatch,
+) -> None:
+    """Step 4: collection_status=partial이면 can_analyze는 True고,
+    ready/non-ready 옵션이 모두 응답에 남으며 각각의 status/
+    analysis_available이 정확히 노출된다. 내부 diagnostics는
+    노출되지 않는다."""
+
+    ready_option = make_product_option(
+        "19호", source_option_id="19"
+    ).model_copy(
+        update={
+            "mapping_status": "matched",
+            "status": "ready",
+            "analysis_available": True,
+        }
+    )
+    non_ready_option = make_product_option(
+        "21호", source_option_id="21"
+    ).model_copy(
+        update={
+            "mapping_status": "unmatched",
+            "status": "unmapped",
+            "analysis_available": False,
+        }
+    )
+
+    monkeypatch.setattr(
+        main.product_option_service,
+        "prepare_product",
+        lambda _product: ProductOptionPreparationResult(
+            requires_option_selection=True,
+            options=[ready_option, non_ready_option],
+            can_analyze=True,
+            status="mapping_failed",
+            collection_status="partial",
+            mapping_diagnostics=OptionMappingDiagnostics(
+                collected_option_count=2,
+                matched_count=1,
+                unmatched_count=1,
+            ),
+        ),
+    )
+    response = TestClient(main.app).post(
+        "/products/select",
+        json=selection_payload(),
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["can_analyze"] is True
+    assert body["collection_status"] == "partial"
+    assert body["option_status"] == "partial"
+    assert body["requires_option_selection"] is True
+
+    options_by_name = {
+        option["option_name"]: option for option in body["options"]
+    }
+    assert options_by_name["19호"]["status"] == "ready"
+    assert options_by_name["19호"]["analysis_available"] is True
+    assert options_by_name["21호"]["status"] == "unmapped"
+    assert options_by_name["21호"]["analysis_available"] is False
+
+    # 내부 diagnostics(collected_option_count 등)는 API에 노출되지
+    # 않는다.
+    for internal_value in (
+        "collected_option_count",
+        "mapping_diagnostics",
+    ):
+        assert internal_value not in response.text

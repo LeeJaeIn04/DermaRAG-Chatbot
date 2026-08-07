@@ -64,6 +64,11 @@ from app.products.allergen_mapper import (
     build_allergen_context,
     build_product_allergens,
 )
+from app.products.parser_debug import (
+    ParserDebugResponse,
+    ParserDebugUnavailableError,
+    build_parser_debug_response,
+)
 
 
 app = FastAPI(
@@ -109,7 +114,7 @@ ingredient_repository = (
 # 상품 검색 provider를 한 번 실행해 기본 정보와 검색 관계를 저장한다.
 product_search_service = ProductSearchService(
     provider=OliveYoungProductSearchProvider(
-        headless=settings.product_playwright_headless,
+        headless=settings.playwright_headless,
         timeout_ms=settings.product_playwright_timeout_ms,
         deadline_ms=settings.product_playwright_deadline_ms,
         max_attempts=settings.product_playwright_max_attempts,
@@ -124,11 +129,11 @@ product_search_service = ProductSearchService(
 # 올리브영 상품 페이지에서
 # 실제 전성분을 가져오는 추출기다.
 #
-# 운영에서는 smoke test 확인 후 PRODUCT_PLAYWRIGHT_HEADLESS=true로
+# 운영에서는 smoke test 확인 후 PLAYWRIGHT_HEADLESS=true로
 # 실행한다. 실패 시 자동으로 headed 모드로 전환하지 않는다.
 ingredient_extractor = (
     OliveYoungIngredientExtractor(
-        headless=settings.product_playwright_headless,
+        headless=settings.playwright_headless,
         timeout_ms=settings.product_playwright_timeout_ms,
         deadline_ms=settings.product_playwright_deadline_ms,
         max_attempts=settings.product_playwright_max_attempts,
@@ -147,13 +152,16 @@ ingredient_cache_service = (
         ttl_days=settings.product_ingredient_ttl_days,
         cache_only_mode=settings.product_cache_only_mode,
         live_collection_enabled=settings.product_live_collection_enabled,
+        option_level_cache_enabled=(
+            settings.product_option_level_cache_enabled
+        ),
     )
 )
 
 product_option_extractor = (
     OliveYoungProductOptionExtractor(
         ingredient_extractor=ingredient_extractor,
-        headless=settings.product_playwright_headless,
+        headless=settings.playwright_headless,
         timeout_ms=settings.product_playwright_timeout_ms,
         deadline_ms=settings.product_playwright_deadline_ms,
         max_attempts=settings.product_playwright_max_attempts,
@@ -165,6 +173,12 @@ product_option_service = ProductOptionService(
     cache_service=ingredient_cache_service,
     retry_base_seconds=settings.product_collection_retry_base_seconds,
     retry_max_seconds=settings.product_collection_retry_max_seconds,
+    shadow_observation_enabled=(
+        settings.product_shadow_observation_enabled
+    ),
+    selected_parser_result_enabled=(
+        settings.product_selected_parser_result_enabled
+    ),
 )
 
 
@@ -305,7 +319,15 @@ def select_product(
 
     if option_preparation.can_analyze:
         next_action = get_next_action(selected_product.category)
-        public_option_status = option_preparation.status
+        # option_preparation.status는 내부 값(ready/not_applicable/
+        # mapping_failed)이라 그대로 API의 option_status Literal에
+        # 못 들어가는 경우가 있다(partial일 때 status는 여전히
+        # "mapping_failed"다) - collection_status가 partial이면
+        # option_status도 partial로 노출한다.
+        if option_preparation.collection_status == "partial":
+            public_option_status = "partial"
+        else:
+            public_option_status = option_preparation.status
         public_options = option_preparation.options
         public_option_error = None
     else:
@@ -324,6 +346,7 @@ def select_product(
         can_analyze=option_preparation.can_analyze,
         option_status=public_option_status,
         option_error=public_option_error,
+        collection_status=option_preparation.collection_status,
     )
 
 
@@ -653,3 +676,41 @@ def analyze_product(
             resolution.extraction_performed
         ),
     )
+
+
+@app.get(
+    "/products/{product_id}/parser-debug",
+    response_model=ParserDebugResponse,
+    summary="[dev-only] production/shadow option parser 비교 진단",
+)
+def get_parser_debug(
+    product_id: str,
+) -> ParserDebugResponse:
+    """
+    production parser(parse_option_full_sections)와 shadow
+    parser(shadow_parse_option_ingredient_sections)의 구조
+    판정·매핑 결과를 나란히 비교하는 읽기 전용 진단 endpoint다.
+
+    ENVIRONMENT=development일 때만 동작한다. DB 캐시나 수집
+    상태(ready 판정, parser_version, collection queue 등)는
+    절대 변경하지 않으며, 전성분 원문이나 전체 성분 목록도
+    반환하지 않는다.
+    """
+
+    if settings.environment != "development":
+        raise HTTPException(
+            status_code=404,
+            detail="Not Found",
+        )
+
+    try:
+        return build_parser_debug_response(
+            product_id,
+            repository=ingredient_repository,
+            option_extractor=product_option_extractor,
+        )
+    except ParserDebugUnavailableError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        ) from error

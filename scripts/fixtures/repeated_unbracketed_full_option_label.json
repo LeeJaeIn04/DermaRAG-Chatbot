@@ -1,0 +1,28 @@
+{
+  "schema_version": "repeated_unbracketed_full_option_label_v1",
+  "contains_full_research_raw_text": false,
+  "cases": [
+    {
+      "name": "product_prefix_plus_full_label",
+      "options": ["01포멜로스킨", "02 누카다미아", "03 베어 그레이프"],
+      "raw_sections": [
+        "롬앤 더 쥬시 래스팅 틴트 3.5g 01 포멜로스킨 정제수, 옥틸도데칸올, 변성알코올, 폴리솔베이트60, 글리세린",
+        "롬앤 더 쥬시 래스팅 틴트 02 누카다미아 정제수, 옥틸도데칸올, 변성알코올, 폴리솔베이트60, 글리세린",
+        "롬앤 더 쥬시 래스팅 틴트 03 베어 그레이프 정제수, 옥틸도데칸올, 변성알코올, 폴리솔베이트60, 글리세린"
+      ],
+      "expected_statuses": ["matched", "matched", "matched"],
+      "expected_variant": "product_prefix_plus_full_label"
+    },
+    {
+      "name": "full_label_direct",
+      "options": ["01피오니발레", "02 너티 베이그", "03 로즈 핀치"],
+      "raw_sections": [
+        "01 피오니 발레 하이드로제네이티드폴리아이소부텐, 다이아이소스테아릴말레이트, 호호바씨오일, 합성왁스, 페녹시에탄올",
+        "02 너티 베이그 하이드로제네이티드폴리아이소부텐, 다이아이소스테아릴말레이트, 호호바씨오일, 합성왁스, 페녹시에탄올",
+        "03 로즈 핀치 하이드로제네이티드폴리아이소부텐, 다이아이소스테아릴말레이트, 호호바씨오일, 합성왁스, 페녹시에탄올"
+      ],
+      "expected_statuses": ["matched", "matched", "matched"],
+      "expected_variant": "full_label_direct"
+    }
+  ]
+}

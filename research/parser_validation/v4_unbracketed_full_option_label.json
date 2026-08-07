@@ -1,0 +1,168 @@
+{
+  "schema_version": "v4-unbracketed-full-option-label-validation-v1",
+  "validated_at": "2026-08-05T15:57:45+09:00",
+  "parser_version": "option-sections-v4-unbracketed-full-label",
+  "production_changes": {
+    "grammar": "repeated_unbracketed_full_option_label",
+    "variants": [
+      "full_label_direct",
+      "product_prefix_plus_full_label"
+    ],
+    "mapping_rule": "explicit_full_option_label_exact",
+    "api_schema_changed": false,
+    "database_schema_changed": false,
+    "review_fallback_added": false
+  },
+  "normalization": {
+    "allowed": [
+      "NFKC",
+      "outer whitespace trim",
+      "whitespace removal for researched full-label comparison",
+      "casefold"
+    ],
+    "removed_or_inferred": [],
+    "promotion_token_removal_in_new_comparator": false,
+    "numeric_only_match": false,
+    "color_only_match": false,
+    "fuzzy_match": false
+  },
+  "activation_guards": {
+    "hierarchical_structure_checked_first": true,
+    "existing_valid_explicit_headers_must_be_absent": true,
+    "minimum_repeated_candidates": 3,
+    "minimum_exact_option_candidates": 2,
+    "minimum_body_length": 20,
+    "minimum_ingredient_count": 3,
+    "consistent_variant_required": true,
+    "nondecreasing_shade_order_required": true,
+    "shared_first_base_ingredient_required": true,
+    "verified_prefixes": [
+      "롬앤 더 쥬시 래스팅 틴트",
+      "롬앤 더 쥬시 래스팅 틴트 3.5g"
+    ]
+  },
+  "target_products": [
+    {
+      "product_id": "A000000241210",
+      "validation_source": "sanitized_real-count fixture",
+      "live_status": "retry_later",
+      "backoff_bypassed": false,
+      "browser_calls": 0,
+      "document_format": "option_full_sections",
+      "matched": 34,
+      "unmatched": 4,
+      "orphans": 2,
+      "expected_unmatched_names": [
+        "39 미스티 피치",
+        "40 베이지 그레이프",
+        "41 소이아몬드",
+        "42 소이 피그"
+      ],
+      "ready": false,
+      "v4_ready_keys_created": 0,
+      "analyze_http_status": 400
+    },
+    {
+      "product_id": "A000000197231",
+      "validation_source": "live production headed flow",
+      "metadata_match_status": "complete_match_reordered",
+      "raw_option_count": 22,
+      "canonical_option_count": 18,
+      "document_format": "option_full_sections",
+      "matched": 16,
+      "unmatched": 2,
+      "orphans": 1,
+      "unmatched_names": ["14 뮤이지", "20 클라우드민트"],
+      "orphan_headers": ["20 클라우디 민트"],
+      "ready": false,
+      "v4_ready_keys_created": 0,
+      "analyze_http_status": 400,
+      "second_call": "retry_later_without_browser"
+    }
+  ],
+  "ready_regression": [
+    {
+      "product_id": "A000000251851",
+      "validation": "live v4 revalidation",
+      "status": "ready",
+      "ready_option_count": 5,
+      "v4_cache_reuse_http_status": 200,
+      "cache_hit": true,
+      "second_browser_calls": 0
+    },
+    {
+      "product_id": "A000000226593",
+      "validation": "live v4 revalidation",
+      "status": "ready",
+      "ready_option_count": 7,
+      "v4_cache_reuse_http_status": 200,
+      "cache_hit": true,
+      "second_browser_calls": 0
+    },
+    {
+      "product_id": "A000000174064",
+      "validation": "existing sanitized research artifact",
+      "offline_status": "ready",
+      "matched": 10,
+      "orphans": 4,
+      "live_status": "browser_verification_blocked",
+      "live_v4_cache_created": false,
+      "stale_v3_analyze_http_status": 400
+    }
+  ],
+  "unsupported_regression": [
+    {
+      "product_id": "A000000180532",
+      "validation": "existing sanitized research artifact",
+      "document_format": "hierarchical_option_internal_sections",
+      "unsupported_options": 12,
+      "false_ready": false
+    },
+    {
+      "product_id": "A000000258200",
+      "validation": "existing sanitized research artifact",
+      "document_format": "hierarchical_option_internal_sections",
+      "unsupported_options": 6,
+      "false_ready": false,
+      "stale_v2_analyze_http_status": 400
+    },
+    {
+      "product_id": "A000000145650",
+      "validation": "existing sanitized research artifact",
+      "document_format": "hierarchical_option_internal_sections",
+      "unsupported_options": 4,
+      "false_ready": false
+    }
+  ],
+  "cache_policy": {
+    "v3_ready_invalidated_by_version": true,
+    "v4_ready_reused": true,
+    "v2_v3_stale_option_keys_blocked": true,
+    "optionless_common_cache_reused_across_versions": true,
+    "partial_collection_saved": false,
+    "new_ready_products": 0
+  },
+  "live_limitations": {
+    "browser_verification_bypassed": false,
+    "blocked_after_product_id": "A000000174064",
+    "debug_html_or_screenshot_retained": false,
+    "full_analyze_smoke": "A251851 call completed before the next live collection; A226593 was interrupted because repeated model initialization was excessively slow",
+    "ready_cache_endpoint_verified_instead": true
+  },
+  "tests": {
+    "targeted_parser_fixture_tests": "11 passed",
+    "targeted_parser_service_cache_tests": "56 passed",
+    "suite_without_external_browser_file": "225 passed",
+    "full_suite": "226 passed, 1 external browser test failed in sandbox",
+    "compileall": "passed",
+    "git_diff_check": "passed"
+  },
+  "not_implemented": [
+    "hash_english_alias",
+    "malformed bracket repair",
+    "numeric-only header",
+    "fuzzy or edit-distance matching",
+    "common formula replication",
+    "hierarchical internal section merge"
+  ]
+}

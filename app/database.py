@@ -98,6 +98,65 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         database.close()
 
+_OPTION_CACHE_COLUMNS_BY_TABLE: dict[str, tuple[tuple[str, str], ...]] = {
+    "product_collection_states": (
+        ("option_cache_collection_status", "VARCHAR(20)"),
+        ("option_cache_parser_version", "VARCHAR(50)"),
+        ("option_cache_diagnostics_json", "TEXT"),
+        ("option_cache_option_count", "INTEGER"),
+    ),
+    "product_ingredient_records": (
+        ("option_cache_status", "VARCHAR(20)"),
+        ("option_cache_mapped_section_id", "VARCHAR(100)"),
+        ("option_cache_parser_version", "VARCHAR(50)"),
+        ("option_cache_diagnostics_json", "TEXT"),
+    ),
+}
+
+
+def migrate_option_cache_columns(target_engine=None) -> None:
+    """Step 3 option-level cache용 nullable 컬럼을 additive하게 추가한다.
+
+    `PRAGMA table_info`로 이미 있는 컬럼은 건너뛰므로 몇 번을
+    다시 실행해도 안전하다(idempotent). 테이블이 아직 없으면
+    아무것도 하지 않는다 - `Base.metadata.create_all()`이 새
+    컬럼까지 포함해 테이블을 만들어 준다. 기존 컬럼/테이블은 절대
+    변경하거나 지우지 않는다.
+    """
+
+    active_engine = target_engine if target_engine is not None else engine
+    if active_engine.dialect.name != "sqlite":
+        return
+
+    with active_engine.begin() as connection:
+        for table_name, columns in _OPTION_CACHE_COLUMNS_BY_TABLE.items():
+            table_exists = connection.execute(
+                text(
+                    "SELECT 1 FROM sqlite_master "
+                    "WHERE type = 'table' AND name = :table_name"
+                ),
+                {"table_name": table_name},
+            ).first()
+            if table_exists is None:
+                continue
+
+            existing_columns = {
+                row[1]
+                for row in connection.execute(
+                    text(f"PRAGMA table_info({table_name})")
+                )
+            }
+            for column_name, ddl_type in columns:
+                if column_name in existing_columns:
+                    continue
+                connection.execute(
+                    text(
+                        f"ALTER TABLE {table_name} "
+                        f"ADD COLUMN {column_name} {ddl_type}"
+                    )
+                )
+
+
 def create_database_tables() -> None:
     """
     SQLAlchemy에 등록된 모든 테이블을 생성한다.
@@ -136,6 +195,8 @@ def create_database_tables() -> None:
                             "NOT NULL DEFAULT ''"
                         )
                     )
+
+    migrate_option_cache_columns(engine)
 
     Base.metadata.create_all(bind=engine)
 

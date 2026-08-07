@@ -1,0 +1,10 @@
+{
+  "schema_version": "sanitized_shadow_string_formula_prefix_candidates_v1",
+  "contains_full_research_raw_text": false,
+  "product_id": "A000000258200",
+  "note": "번호 표기 없이 '알 수 없는 이름 텍스트 + 이미 등장한 첫 성분(정제수)'이 반복되는 문자열형 내부 formula 구조를 sanitize한 fixture. 실제 값이 아닌 대표 성분으로 치환했다.",
+  "options": [
+    "01 립글로스"
+  ],
+  "raw_text": "[01 립글로스] 정제수, 글리세린, 폴리부텐, 향료 코랄글로우 정제수, 글리세린, 디메치콘, 마이카(CI 77019) 피치쉬머 정제수, 글리세린, 트라이에틸헥사노인, 적색201호"
+}

@@ -1,0 +1,1756 @@
+{
+  "schema_version": "flight_mismatch_diagnostics_v1",
+  "contains_full_html": false,
+  "contains_full_flight_payload": false,
+  "contains_cookies_or_storage_state": false,
+  "products": [
+    {
+      "product_id": "A000000251851",
+      "collection_status": "collected",
+      "dom": [
+        {
+          "index": 0,
+          "raw_name": "[본품+리필+퍼프5개] 17N",
+          "normalized_name": "본품+리필+퍼프5개17n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 1,
+          "raw_name": "[본품+리필+퍼프5개] 21N",
+          "normalized_name": "본품+리필+퍼프5개21n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 2,
+          "raw_name": "[본품+리필+퍼프5개] 21P",
+          "normalized_name": "본품+리필+퍼프5개21p",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 3,
+          "raw_name": "[본품+리필+파우치] 17N",
+          "normalized_name": "본품+리필+파우치17n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 4,
+          "raw_name": "[본품+리필+파우치] 21N",
+          "normalized_name": "본품+리필+파우치21n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 5,
+          "raw_name": "[본품+리필+파우치] 21P",
+          "normalized_name": "본품+리필+파우치21p",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 6,
+          "raw_name": "[본품+리필] 17N",
+          "normalized_name": "본품+리필17n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 7,
+          "raw_name": "[본품+리필] 21N",
+          "normalized_name": "본품+리필21n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 8,
+          "raw_name": "[본품+리필] 23N",
+          "normalized_name": "본품+리필23n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 9,
+          "raw_name": "[본품+리필] 21P",
+          "normalized_name": "본품+리필21p",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 10,
+          "raw_name": "NEW / [본품+리필] 22N",
+          "normalized_name": "new본품+리필22n",
+          "sold_out": true,
+          "disabled": true
+        }
+      ],
+      "flight": [
+        {
+          "index": 0,
+          "sort_order": 1,
+          "option_number": "009",
+          "raw_name": "[본품+리필+퍼프5개] 17N",
+          "normalized_name": "본품+리필+퍼프5개17n",
+          "sold_out_flag": false,
+          "representative": true
+        },
+        {
+          "index": 1,
+          "sort_order": 1,
+          "option_number": "010",
+          "raw_name": "[본품+리필+퍼프5개] 21N",
+          "normalized_name": "본품+리필+퍼프5개21n",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 2,
+          "sort_order": 1,
+          "option_number": "011",
+          "raw_name": "[본품+리필+퍼프5개] 21P",
+          "normalized_name": "본품+리필+퍼프5개21p",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 3,
+          "sort_order": 2,
+          "option_number": "006",
+          "raw_name": "[본품+리필+파우치] 17N",
+          "normalized_name": "본품+리필+파우치17n",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 4,
+          "sort_order": 2,
+          "option_number": "007",
+          "raw_name": "[본품+리필+파우치] 21N",
+          "normalized_name": "본품+리필+파우치21n",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 5,
+          "sort_order": 2,
+          "option_number": "008",
+          "raw_name": "[본품+리필+파우치] 21P",
+          "normalized_name": "본품+리필+파우치21p",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 6,
+          "sort_order": 11,
+          "option_number": "001",
+          "raw_name": "[본품+리필] 17N",
+          "normalized_name": "본품+리필17n",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 7,
+          "sort_order": 12,
+          "option_number": "002",
+          "raw_name": "[본품+리필] 21P",
+          "normalized_name": "본품+리필21p",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 8,
+          "sort_order": 13,
+          "option_number": "003",
+          "raw_name": "[본품+리필] 21N",
+          "normalized_name": "본품+리필21n",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 9,
+          "sort_order": 14,
+          "option_number": "005",
+          "raw_name": "NEW / [본품+리필] 22N",
+          "normalized_name": "new본품+리필22n",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 10,
+          "sort_order": 15,
+          "option_number": "004",
+          "raw_name": "[본품+리필] 23N",
+          "normalized_name": "본품+리필23n",
+          "sold_out_flag": false,
+          "representative": false
+        }
+      ],
+      "comparison": {
+        "dom_count": 11,
+        "flight_count": 11,
+        "position_match_count": 7,
+        "unique_name_multiset_equal": true,
+        "dom_only_normalized_names": [],
+        "flight_only_normalized_names": [],
+        "duplicate_normalized_names": [],
+        "sold_out_state_differences": [],
+        "mismatch_category": "order_only_mismatch",
+        "safe_reorder_possible": true,
+        "safe_enrichment_possible": true,
+        "reason": "고유한 보수적 정규화 이름으로 완전 1:1 재정렬했습니다."
+      }
+    },
+    {
+      "product_id": "A000000226593",
+      "collection_status": "collected",
+      "dom": [
+        {
+          "index": 0,
+          "raw_name": "[본품+리필] 17N",
+          "normalized_name": "본품+리필17n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 1,
+          "raw_name": "[본품+리필] 19P",
+          "normalized_name": "본품+리필19p",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 2,
+          "raw_name": "[본품+리필] 19N",
+          "normalized_name": "본품+리필19n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 3,
+          "raw_name": "[본품+리필] 21P",
+          "normalized_name": "본품+리필21p",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 4,
+          "raw_name": "[본품+리필] 21N",
+          "normalized_name": "본품+리필21n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 5,
+          "raw_name": "[본품+리필] 23N",
+          "normalized_name": "본품+리필23n",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 6,
+          "raw_name": "[본품+리필] 22N",
+          "normalized_name": "본품+리필22n",
+          "sold_out": true,
+          "disabled": true
+        }
+      ],
+      "flight": [
+        {
+          "index": 0,
+          "sort_order": 2,
+          "option_number": "001",
+          "raw_name": "[본품+리필] 17N",
+          "normalized_name": "본품+리필17n",
+          "sold_out_flag": false,
+          "representative": true
+        },
+        {
+          "index": 1,
+          "sort_order": 3,
+          "option_number": "014",
+          "raw_name": "[본품+리필] 19P",
+          "normalized_name": "본품+리필19p",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 2,
+          "sort_order": 4,
+          "option_number": "013",
+          "raw_name": "[본품+리필] 19N",
+          "normalized_name": "본품+리필19n",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 3,
+          "sort_order": 5,
+          "option_number": "012",
+          "raw_name": "[본품+리필] 21P",
+          "normalized_name": "본품+리필21p",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 4,
+          "sort_order": 6,
+          "option_number": "011",
+          "raw_name": "[본품+리필] 21N",
+          "normalized_name": "본품+리필21n",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 5,
+          "sort_order": 7,
+          "option_number": "010",
+          "raw_name": "[본품+리필] 22N",
+          "normalized_name": "본품+리필22n",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 6,
+          "sort_order": 8,
+          "option_number": "009",
+          "raw_name": "[본품+리필] 23N",
+          "normalized_name": "본품+리필23n",
+          "sold_out_flag": false,
+          "representative": false
+        }
+      ],
+      "comparison": {
+        "dom_count": 7,
+        "flight_count": 7,
+        "position_match_count": 5,
+        "unique_name_multiset_equal": true,
+        "dom_only_normalized_names": [],
+        "flight_only_normalized_names": [],
+        "duplicate_normalized_names": [],
+        "sold_out_state_differences": [],
+        "mismatch_category": "order_only_mismatch",
+        "safe_reorder_possible": true,
+        "safe_enrichment_possible": true,
+        "reason": "고유한 보수적 정규화 이름으로 완전 1:1 재정렬했습니다."
+      }
+    },
+    {
+      "product_id": "A000000171371",
+      "collection_status": "collected",
+      "dom": [
+        {
+          "index": 0,
+          "raw_name": "[Best] 헤일로(HALO)",
+          "normalized_name": "best헤일로halo",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 1,
+          "raw_name": "[Best] 베이글 (BAGEL)",
+          "normalized_name": "best베이글bagel",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 2,
+          "raw_name": "[Best] 토스트 (TOAST)",
+          "normalized_name": "best토스트toast",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 3,
+          "raw_name": "[Best] 필로우 (PILLOW)",
+          "normalized_name": "best필로우pillow",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 4,
+          "raw_name": "피이그 (FEEG)",
+          "normalized_name": "피이그feeg",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 5,
+          "raw_name": "카야 (KAYA)",
+          "normalized_name": "카야kaya",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 6,
+          "raw_name": "헤이즈 (HAZE)",
+          "normalized_name": "헤이즈haze",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 7,
+          "raw_name": "타로 (TARO)",
+          "normalized_name": "타로taro",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 8,
+          "raw_name": "텐더 (TENDER)",
+          "normalized_name": "텐더tender",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 9,
+          "raw_name": "포브 (POVE)",
+          "normalized_name": "포브pove",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 10,
+          "raw_name": "어빗 (A BIT)",
+          "normalized_name": "어빗abit",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 11,
+          "raw_name": "페이지 (PAGIE)",
+          "normalized_name": "페이지pagie",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 12,
+          "raw_name": "배쉬풀(BASHFUL)",
+          "normalized_name": "배쉬풀bashful",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 13,
+          "raw_name": "[NEW/브러쉬증정] 베이글(BAGEL)",
+          "normalized_name": "new브러쉬증정베이글bagel",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 14,
+          "raw_name": "[NEW/브러쉬증정]필로우(PILLOW)",
+          "normalized_name": "new브러쉬증정필로우pillow",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 15,
+          "raw_name": "[NEW/브러쉬증정] 타로(TARO)",
+          "normalized_name": "new브러쉬증정타로taro",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 16,
+          "raw_name": "[헤어핀 기획] 치피 (CHIPPY)",
+          "normalized_name": "헤어핀기획치피chippy",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 17,
+          "raw_name": "[NEW/부활템] 조이 (JOY)",
+          "normalized_name": "new부활템조이joy",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 18,
+          "raw_name": "헤이그 (HAGUE)",
+          "normalized_name": "헤이그hague",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 19,
+          "raw_name": "티크 (TEAK)",
+          "normalized_name": "티크teak",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 20,
+          "raw_name": "치피 (CHIPPY)",
+          "normalized_name": "치피chippy",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 21,
+          "raw_name": "야미 (YUMMY)",
+          "normalized_name": "야미yummy",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 22,
+          "raw_name": "[Best] 니제 (NIESE)",
+          "normalized_name": "best니제niese",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 23,
+          "raw_name": "그레이브 (GRAVE)",
+          "normalized_name": "그레이브grave",
+          "sold_out": true,
+          "disabled": true
+        }
+      ],
+      "flight": [
+        {
+          "index": 0,
+          "sort_order": 1,
+          "option_number": "037",
+          "raw_name": "[NEW/브러쉬증정] 베이글(BAGEL)",
+          "normalized_name": "new브러쉬증정베이글bagel",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 1,
+          "sort_order": 1,
+          "option_number": "038",
+          "raw_name": "[NEW/브러쉬증정]필로우(PILLOW)",
+          "normalized_name": "new브러쉬증정필로우pillow",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 2,
+          "sort_order": 1,
+          "option_number": "039",
+          "raw_name": "[NEW/브러쉬증정] 타로(TARO)",
+          "normalized_name": "new브러쉬증정타로taro",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 3,
+          "sort_order": 2,
+          "option_number": "027",
+          "raw_name": "[헤어핀 기획] 치피 (CHIPPY)",
+          "normalized_name": "헤어핀기획치피chippy",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 4,
+          "sort_order": 2,
+          "option_number": "036",
+          "raw_name": "[NEW/부활템] 조이 (JOY)",
+          "normalized_name": "new부활템조이joy",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 5,
+          "sort_order": 3,
+          "option_number": "001",
+          "raw_name": "[Best] 헤일로(HALO)",
+          "normalized_name": "best헤일로halo",
+          "sold_out_flag": false,
+          "representative": true
+        },
+        {
+          "index": 6,
+          "sort_order": 3,
+          "option_number": "002",
+          "raw_name": "[Best] 베이글 (BAGEL)",
+          "normalized_name": "best베이글bagel",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 7,
+          "sort_order": 3,
+          "option_number": "007",
+          "raw_name": "[Best] 토스트 (TOAST)",
+          "normalized_name": "best토스트toast",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 8,
+          "sort_order": 3,
+          "option_number": "012",
+          "raw_name": "[Best] 필로우 (PILLOW)",
+          "normalized_name": "best필로우pillow",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 9,
+          "sort_order": 3,
+          "option_number": "019",
+          "raw_name": "피이그 (FEEG)",
+          "normalized_name": "피이그feeg",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 10,
+          "sort_order": 3,
+          "option_number": "020",
+          "raw_name": "헤이그 (HAGUE)",
+          "normalized_name": "헤이그hague",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 11,
+          "sort_order": 3,
+          "option_number": "021",
+          "raw_name": "티크 (TEAK)",
+          "normalized_name": "티크teak",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 12,
+          "sort_order": 3,
+          "option_number": "022",
+          "raw_name": "치피 (CHIPPY)",
+          "normalized_name": "치피chippy",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 13,
+          "sort_order": 4,
+          "option_number": "028",
+          "raw_name": "카야 (KAYA)",
+          "normalized_name": "카야kaya",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 14,
+          "sort_order": 4,
+          "option_number": "029",
+          "raw_name": "헤이즈 (HAZE)",
+          "normalized_name": "헤이즈haze",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 15,
+          "sort_order": 4,
+          "option_number": "030",
+          "raw_name": "타로 (TARO)",
+          "normalized_name": "타로taro",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 16,
+          "sort_order": 4,
+          "option_number": "031",
+          "raw_name": "텐더 (TENDER)",
+          "normalized_name": "텐더tender",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 17,
+          "sort_order": 5,
+          "option_number": "008",
+          "raw_name": "야미 (YUMMY)",
+          "normalized_name": "야미yummy",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 18,
+          "sort_order": 5,
+          "option_number": "009",
+          "raw_name": "[Best] 니제 (NIESE)",
+          "normalized_name": "best니제niese",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 19,
+          "sort_order": 5,
+          "option_number": "010",
+          "raw_name": "포브 (POVE)",
+          "normalized_name": "포브pove",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 20,
+          "sort_order": 5,
+          "option_number": "011",
+          "raw_name": "어빗 (A BIT)",
+          "normalized_name": "어빗abit",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 21,
+          "sort_order": 5,
+          "option_number": "018",
+          "raw_name": "그레이브 (GRAVE)",
+          "normalized_name": "그레이브grave",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 22,
+          "sort_order": 8,
+          "option_number": "013",
+          "raw_name": "페이지 (PAGIE)",
+          "normalized_name": "페이지pagie",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 23,
+          "sort_order": 18,
+          "option_number": "003",
+          "raw_name": "배쉬풀(BASHFUL)",
+          "normalized_name": "배쉬풀bashful",
+          "sold_out_flag": false,
+          "representative": false
+        }
+      ],
+      "comparison": {
+        "dom_count": 24,
+        "flight_count": 24,
+        "position_match_count": 0,
+        "unique_name_multiset_equal": true,
+        "dom_only_normalized_names": [],
+        "flight_only_normalized_names": [],
+        "duplicate_normalized_names": [],
+        "sold_out_state_differences": [],
+        "mismatch_category": "order_only_mismatch",
+        "safe_reorder_possible": true,
+        "safe_enrichment_possible": true,
+        "reason": "고유한 보수적 정규화 이름으로 완전 1:1 재정렬했습니다."
+      }
+    },
+    {
+      "product_id": "A000000150361",
+      "collection_status": "collected",
+      "dom": [
+        {
+          "index": 0,
+          "raw_name": "[NEW 기획] 폴인오트",
+          "normalized_name": "new기획폴인오트",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 1,
+          "raw_name": "[단품] 유자 시트러스 티",
+          "normalized_name": "단품유자시트러스티",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 2,
+          "raw_name": "[단품] 시나몬 롤",
+          "normalized_name": "단품시나몬롤",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 3,
+          "raw_name": "[단품] 14 클래식 포터리",
+          "normalized_name": "단품14클래식포터리",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 4,
+          "raw_name": "[단품] 13 얼모스트 그레이프",
+          "normalized_name": "단품13얼모스트그레이프",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 5,
+          "raw_name": "[단품] 12 폴인오트",
+          "normalized_name": "단품12폴인오트",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 6,
+          "raw_name": "[단품] 11 레터프롬스프링",
+          "normalized_name": "단품11레터프롬스프링",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 7,
+          "raw_name": "[단품] 10 픽 더 로즈",
+          "normalized_name": "단품10픽더로즈",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 8,
+          "raw_name": "[단품] 08 쉘온더비치",
+          "normalized_name": "단품08쉘온더비치",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 9,
+          "raw_name": "[단품] 07 쉘인더씨",
+          "normalized_name": "단품07쉘인더씨",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 10,
+          "raw_name": "[단품] 06 버튼업",
+          "normalized_name": "단품06버튼업",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 11,
+          "raw_name": "[단품] 05 닛니트",
+          "normalized_name": "단품05닛니트",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 12,
+          "raw_name": "[단품] 03 핑크올로지",
+          "normalized_name": "단품03핑크올로지",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 13,
+          "raw_name": "[단품] 02 무니",
+          "normalized_name": "단품02무니",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 14,
+          "raw_name": "[기획] 유자 시트러스 티",
+          "normalized_name": "기획유자시트러스티",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 15,
+          "raw_name": "[기획] 시나몬 롤",
+          "normalized_name": "기획시나몬롤",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 16,
+          "raw_name": "[기획] 11 레터 프롬 스프링",
+          "normalized_name": "기획11레터프롬스프링",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 17,
+          "raw_name": "[단품] 01 데이지",
+          "normalized_name": "단품01데이지",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 18,
+          "raw_name": "[한정] 로지 클레이(피스 밤)",
+          "normalized_name": "한정로지클레이피스밤",
+          "sold_out": true,
+          "disabled": true
+        }
+      ],
+      "flight": [
+        {
+          "index": 0,
+          "sort_order": 1,
+          "option_number": "073",
+          "raw_name": "[NEW 기획] 폴인오트",
+          "normalized_name": "new기획폴인오트",
+          "sold_out_flag": false,
+          "representative": true
+        },
+        {
+          "index": 1,
+          "sort_order": 2,
+          "option_number": "069",
+          "raw_name": "[기획] 유자 시트러스 티",
+          "normalized_name": "기획유자시트러스티",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 2,
+          "sort_order": 2,
+          "option_number": "071",
+          "raw_name": "[기획] 시나몬 롤",
+          "normalized_name": "기획시나몬롤",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 3,
+          "sort_order": 3,
+          "option_number": "018",
+          "raw_name": "[기획] 11 레터 프롬 스프링",
+          "normalized_name": "기획11레터프롬스프링",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 4,
+          "sort_order": 4,
+          "option_number": "068",
+          "raw_name": "[단품] 유자 시트러스 티",
+          "normalized_name": "단품유자시트러스티",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 5,
+          "sort_order": 5,
+          "option_number": "070",
+          "raw_name": "[단품] 시나몬 롤",
+          "normalized_name": "단품시나몬롤",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 6,
+          "sort_order": 6,
+          "option_number": "019",
+          "raw_name": "[단품] 14 클래식 포터리",
+          "normalized_name": "단품14클래식포터리",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 7,
+          "sort_order": 7,
+          "option_number": "016",
+          "raw_name": "[단품] 13 얼모스트 그레이프",
+          "normalized_name": "단품13얼모스트그레이프",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 8,
+          "sort_order": 8,
+          "option_number": "013",
+          "raw_name": "[단품] 12 폴인오트",
+          "normalized_name": "단품12폴인오트",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 9,
+          "sort_order": 9,
+          "option_number": "012",
+          "raw_name": "[단품] 11 레터프롬스프링",
+          "normalized_name": "단품11레터프롬스프링",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 10,
+          "sort_order": 10,
+          "option_number": "009",
+          "raw_name": "[단품] 10 픽 더 로즈",
+          "normalized_name": "단품10픽더로즈",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 11,
+          "sort_order": 12,
+          "option_number": "008",
+          "raw_name": "[단품] 08 쉘온더비치",
+          "normalized_name": "단품08쉘온더비치",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 12,
+          "sort_order": 13,
+          "option_number": "007",
+          "raw_name": "[단품] 07 쉘인더씨",
+          "normalized_name": "단품07쉘인더씨",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 13,
+          "sort_order": 14,
+          "option_number": "006",
+          "raw_name": "[단품] 06 버튼업",
+          "normalized_name": "단품06버튼업",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 14,
+          "sort_order": 15,
+          "option_number": "005",
+          "raw_name": "[단품] 05 닛니트",
+          "normalized_name": "단품05닛니트",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 15,
+          "sort_order": 17,
+          "option_number": "003",
+          "raw_name": "[단품] 03 핑크올로지",
+          "normalized_name": "단품03핑크올로지",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 16,
+          "sort_order": 18,
+          "option_number": "002",
+          "raw_name": "[단품] 02 무니",
+          "normalized_name": "단품02무니",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 17,
+          "sort_order": 19,
+          "option_number": "001",
+          "raw_name": "[단품] 01 데이지",
+          "normalized_name": "단품01데이지",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 18,
+          "sort_order": 32,
+          "option_number": "041",
+          "raw_name": "[한정] 로지 클레이(피스 밤)",
+          "normalized_name": "한정로지클레이피스밤",
+          "sold_out_flag": true,
+          "representative": false
+        }
+      ],
+      "comparison": {
+        "dom_count": 19,
+        "flight_count": 19,
+        "position_match_count": 3,
+        "unique_name_multiset_equal": true,
+        "dom_only_normalized_names": [],
+        "flight_only_normalized_names": [],
+        "duplicate_normalized_names": [],
+        "sold_out_state_differences": [],
+        "mismatch_category": "order_only_mismatch",
+        "safe_reorder_possible": true,
+        "safe_enrichment_possible": true,
+        "reason": "고유한 보수적 정규화 이름으로 완전 1:1 재정렬했습니다."
+      }
+    },
+    {
+      "product_id": "A000000177984",
+      "collection_status": "collected",
+      "dom": [
+        {
+          "index": 0,
+          "raw_name": "[단독/립세럼+투명 브로우 기획] 조지아",
+          "normalized_name": "단독립세럼+투명브로우기획조지아",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 1,
+          "raw_name": "[단독/립세럼+투명 브로우 기획] 로즐린",
+          "normalized_name": "단독립세럼+투명브로우기획로즐린",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 2,
+          "raw_name": "[립세럼+투명 브로우 기획] 란제리",
+          "normalized_name": "립세럼+투명브로우기획란제리",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 3,
+          "raw_name": "[마블컬렉션] 10호 베어로맨스",
+          "normalized_name": "마블컬렉션10호베어로맨스",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 4,
+          "raw_name": "[마블컬렉션] 133호 로지체리",
+          "normalized_name": "마블컬렉션133호로지체리",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 5,
+          "raw_name": "[마블컬렉션] 410호 세레나데",
+          "normalized_name": "마블컬렉션410호세레나데",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 6,
+          "raw_name": "[NEW] 325호 선키스드",
+          "normalized_name": "new325호선키스드",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 7,
+          "raw_name": "[올영단독] 421호 로즐린 단품",
+          "normalized_name": "올영단독421호로즐린단품",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 8,
+          "raw_name": "380호 체리쉬",
+          "normalized_name": "380호체리쉬",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 9,
+          "raw_name": "415호 브라우니보이",
+          "normalized_name": "415호브라우니보이",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 10,
+          "raw_name": "462호 스피치리스",
+          "normalized_name": "462호스피치리스",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 11,
+          "raw_name": "422호 란제리 단품",
+          "normalized_name": "422호란제리단품",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 12,
+          "raw_name": "401호 누디스트",
+          "normalized_name": "401호누디스트",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 13,
+          "raw_name": "102호 플러티",
+          "normalized_name": "102호플러티",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 14,
+          "raw_name": "18호 이노센트",
+          "normalized_name": "18호이노센트",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 15,
+          "raw_name": "390호 웻베리",
+          "normalized_name": "390호웻베리",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 16,
+          "raw_name": "418호 허니드",
+          "normalized_name": "418호허니드",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 17,
+          "raw_name": "470호 체리콕",
+          "normalized_name": "470호체리콕",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 18,
+          "raw_name": "[단독/립컨실러+립트리트먼트] 조지아",
+          "normalized_name": "단독립컨실러+립트리트먼트조지아",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 19,
+          "raw_name": "[올영단독] 200호 조지아 단품",
+          "normalized_name": "올영단독200호조지아단품",
+          "sold_out": true,
+          "disabled": true
+        }
+      ],
+      "flight": [
+        {
+          "index": 0,
+          "sort_order": 1,
+          "option_number": "034",
+          "raw_name": "[단독/립세럼+투명 브로우 기획] 조지아",
+          "normalized_name": "단독립세럼+투명브로우기획조지아",
+          "sold_out_flag": false,
+          "representative": true
+        },
+        {
+          "index": 1,
+          "sort_order": 2,
+          "option_number": "032",
+          "raw_name": "[단독/립컨실러+립트리트먼트] 조지아",
+          "normalized_name": "단독립컨실러+립트리트먼트조지아",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 2,
+          "sort_order": 3,
+          "option_number": "036",
+          "raw_name": "[단독/립세럼+투명 브로우 기획] 로즐린",
+          "normalized_name": "단독립세럼+투명브로우기획로즐린",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 3,
+          "sort_order": 4,
+          "option_number": "035",
+          "raw_name": "[립세럼+투명 브로우 기획] 란제리",
+          "normalized_name": "립세럼+투명브로우기획란제리",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 4,
+          "sort_order": 5,
+          "option_number": "042",
+          "raw_name": "[마블컬렉션] 10호 베어로맨스",
+          "normalized_name": "마블컬렉션10호베어로맨스",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 5,
+          "sort_order": 6,
+          "option_number": "043",
+          "raw_name": "[마블컬렉션] 133호 로지체리",
+          "normalized_name": "마블컬렉션133호로지체리",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 6,
+          "sort_order": 7,
+          "option_number": "044",
+          "raw_name": "[마블컬렉션] 410호 세레나데",
+          "normalized_name": "마블컬렉션410호세레나데",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 7,
+          "sort_order": 8,
+          "option_number": "041",
+          "raw_name": "[NEW] 325호 선키스드",
+          "normalized_name": "new325호선키스드",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 8,
+          "sort_order": 9,
+          "option_number": "033",
+          "raw_name": "[올영단독] 421호 로즐린 단품",
+          "normalized_name": "올영단독421호로즐린단품",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 9,
+          "sort_order": 10,
+          "option_number": "025",
+          "raw_name": "[올영단독] 200호 조지아 단품",
+          "normalized_name": "올영단독200호조지아단품",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 10,
+          "sort_order": 11,
+          "option_number": "010",
+          "raw_name": "380호 체리쉬",
+          "normalized_name": "380호체리쉬",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 11,
+          "sort_order": 12,
+          "option_number": "026",
+          "raw_name": "415호 브라우니보이",
+          "normalized_name": "415호브라우니보이",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 12,
+          "sort_order": 13,
+          "option_number": "003",
+          "raw_name": "462호 스피치리스",
+          "normalized_name": "462호스피치리스",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 13,
+          "sort_order": 14,
+          "option_number": "004",
+          "raw_name": "422호 란제리 단품",
+          "normalized_name": "422호란제리단품",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 14,
+          "sort_order": 15,
+          "option_number": "007",
+          "raw_name": "401호 누디스트",
+          "normalized_name": "401호누디스트",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 15,
+          "sort_order": 16,
+          "option_number": "008",
+          "raw_name": "102호 플러티",
+          "normalized_name": "102호플러티",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 16,
+          "sort_order": 17,
+          "option_number": "009",
+          "raw_name": "18호 이노센트",
+          "normalized_name": "18호이노센트",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 17,
+          "sort_order": 18,
+          "option_number": "022",
+          "raw_name": "390호 웻베리",
+          "normalized_name": "390호웻베리",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 18,
+          "sort_order": 19,
+          "option_number": "023",
+          "raw_name": "418호 허니드",
+          "normalized_name": "418호허니드",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 19,
+          "sort_order": 20,
+          "option_number": "024",
+          "raw_name": "470호 체리콕",
+          "normalized_name": "470호체리콕",
+          "sold_out_flag": false,
+          "representative": false
+        }
+      ],
+      "comparison": {
+        "dom_count": 20,
+        "flight_count": 20,
+        "position_match_count": 1,
+        "unique_name_multiset_equal": true,
+        "dom_only_normalized_names": [],
+        "flight_only_normalized_names": [],
+        "duplicate_normalized_names": [],
+        "sold_out_state_differences": [],
+        "mismatch_category": "order_only_mismatch",
+        "safe_reorder_possible": true,
+        "safe_enrichment_possible": true,
+        "reason": "고유한 보수적 정규화 이름으로 완전 1:1 재정렬했습니다."
+      }
+    },
+    {
+      "product_id": "A000000120656",
+      "collection_status": "collected",
+      "dom": [
+        {
+          "index": 0,
+          "raw_name": "[아이프라이머기획] 21 스위티 베일",
+          "normalized_name": "아이프라이머기획21스위티베일",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 1,
+          "raw_name": "01 샤이닝 린넨",
+          "normalized_name": "01샤이닝린넨",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 2,
+          "raw_name": "02 로지 듀",
+          "normalized_name": "02로지듀",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 3,
+          "raw_name": "08 센티드 부케",
+          "normalized_name": "08센티드부케",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 4,
+          "raw_name": "09 쉬어 누드",
+          "normalized_name": "09쉬어누드",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 5,
+          "raw_name": "11 듀 베이지",
+          "normalized_name": "11듀베이지",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 6,
+          "raw_name": "14 피치 블룸",
+          "normalized_name": "14피치블룸",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 7,
+          "raw_name": "15 피오니 티",
+          "normalized_name": "15피오니티",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 8,
+          "raw_name": "16 밀키 로즈",
+          "normalized_name": "16밀키로즈",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 9,
+          "raw_name": "18 프로스티 라벤더",
+          "normalized_name": "18프로스티라벤더",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 10,
+          "raw_name": "19 베베 핑크",
+          "normalized_name": "19베베핑크",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 11,
+          "raw_name": "20 미스티 그린",
+          "normalized_name": "20미스티그린",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 12,
+          "raw_name": "21 스위티 베일",
+          "normalized_name": "21스위티베일",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 13,
+          "raw_name": "22 허밍 글로우",
+          "normalized_name": "22허밍글로우",
+          "sold_out": false,
+          "disabled": false
+        },
+        {
+          "index": 14,
+          "raw_name": "[메탈홀더기획] 09 쉬어 누드",
+          "normalized_name": "메탈홀더기획09쉬어누드",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 15,
+          "raw_name": "[메탈홀더기획] 15 피오니 티",
+          "normalized_name": "메탈홀더기획15피오니티",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 16,
+          "raw_name": "[메탈홀더기획] 22 허밍 글로우",
+          "normalized_name": "메탈홀더기획22허밍글로우",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 17,
+          "raw_name": "[아이프라이머기획] 20 미스티 그린",
+          "normalized_name": "아이프라이머기획20미스티그린",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 18,
+          "raw_name": "07 뮤티드 토프",
+          "normalized_name": "07뮤티드토프",
+          "sold_out": true,
+          "disabled": true
+        },
+        {
+          "index": 19,
+          "raw_name": "10 클래시 휘그",
+          "normalized_name": "10클래시휘그",
+          "sold_out": true,
+          "disabled": true
+        }
+      ],
+      "flight": [
+        {
+          "index": 0,
+          "sort_order": 2,
+          "option_number": "045",
+          "raw_name": "[메탈홀더기획] 09 쉬어 누드",
+          "normalized_name": "메탈홀더기획09쉬어누드",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 1,
+          "sort_order": 2,
+          "option_number": "046",
+          "raw_name": "[메탈홀더기획] 15 피오니 티",
+          "normalized_name": "메탈홀더기획15피오니티",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 2,
+          "sort_order": 2,
+          "option_number": "047",
+          "raw_name": "[메탈홀더기획] 22 허밍 글로우",
+          "normalized_name": "메탈홀더기획22허밍글로우",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 3,
+          "sort_order": 3,
+          "option_number": "040",
+          "raw_name": "[아이프라이머기획] 20 미스티 그린",
+          "normalized_name": "아이프라이머기획20미스티그린",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 4,
+          "sort_order": 4,
+          "option_number": "041",
+          "raw_name": "[아이프라이머기획] 21 스위티 베일",
+          "normalized_name": "아이프라이머기획21스위티베일",
+          "sold_out_flag": false,
+          "representative": true
+        },
+        {
+          "index": 5,
+          "sort_order": 5,
+          "option_number": "001",
+          "raw_name": "01 샤이닝 린넨",
+          "normalized_name": "01샤이닝린넨",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 6,
+          "sort_order": 6,
+          "option_number": "005",
+          "raw_name": "02 로지 듀",
+          "normalized_name": "02로지듀",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 7,
+          "sort_order": 7,
+          "option_number": "006",
+          "raw_name": "07 뮤티드 토프",
+          "normalized_name": "07뮤티드토프",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 8,
+          "sort_order": 8,
+          "option_number": "007",
+          "raw_name": "08 센티드 부케",
+          "normalized_name": "08센티드부케",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 9,
+          "sort_order": 9,
+          "option_number": "009",
+          "raw_name": "09 쉬어 누드",
+          "normalized_name": "09쉬어누드",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 10,
+          "sort_order": 10,
+          "option_number": "008",
+          "raw_name": "10 클래시 휘그",
+          "normalized_name": "10클래시휘그",
+          "sold_out_flag": true,
+          "representative": false
+        },
+        {
+          "index": 11,
+          "sort_order": 11,
+          "option_number": "013",
+          "raw_name": "11 듀 베이지",
+          "normalized_name": "11듀베이지",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 12,
+          "sort_order": 14,
+          "option_number": "019",
+          "raw_name": "14 피치 블룸",
+          "normalized_name": "14피치블룸",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 13,
+          "sort_order": 15,
+          "option_number": "020",
+          "raw_name": "15 피오니 티",
+          "normalized_name": "15피오니티",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 14,
+          "sort_order": 16,
+          "option_number": "030",
+          "raw_name": "16 밀키 로즈",
+          "normalized_name": "16밀키로즈",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 15,
+          "sort_order": 18,
+          "option_number": "028",
+          "raw_name": "18 프로스티 라벤더",
+          "normalized_name": "18프로스티라벤더",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 16,
+          "sort_order": 19,
+          "option_number": "035",
+          "raw_name": "19 베베 핑크",
+          "normalized_name": "19베베핑크",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 17,
+          "sort_order": 20,
+          "option_number": "036",
+          "raw_name": "20 미스티 그린",
+          "normalized_name": "20미스티그린",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 18,
+          "sort_order": 21,
+          "option_number": "037",
+          "raw_name": "21 스위티 베일",
+          "normalized_name": "21스위티베일",
+          "sold_out_flag": false,
+          "representative": false
+        },
+        {
+          "index": 19,
+          "sort_order": 22,
+          "option_number": "048",
+          "raw_name": "22 허밍 글로우",
+          "normalized_name": "22허밍글로우",
+          "sold_out_flag": false,
+          "representative": false
+        }
+      ],
+      "comparison": {
+        "dom_count": 20,
+        "flight_count": 20,
+        "position_match_count": 0,
+        "unique_name_multiset_equal": true,
+        "dom_only_normalized_names": [],
+        "flight_only_normalized_names": [],
+        "duplicate_normalized_names": [],
+        "sold_out_state_differences": [],
+        "mismatch_category": "order_only_mismatch",
+        "safe_reorder_possible": true,
+        "safe_enrichment_possible": true,
+        "reason": "고유한 보수적 정규화 이름으로 완전 1:1 재정렬했습니다."
+      }
+    }
+  ]
+}

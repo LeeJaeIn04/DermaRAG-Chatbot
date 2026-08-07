@@ -7,6 +7,7 @@ ambiguous가 아니라 matched로 연결되는지 확인한다.
 """
 
 from app.products.option_parser import (
+    canonicalize_product_options,
     make_product_option,
     split_option_ingredient_sections,
 )
@@ -27,36 +28,21 @@ def test_master_cushion_eight_options_connect_to_five_shade_sections() -> None:
     options = [
         make_product_option(name) for name in MASTER_CUSHION_OPTION_NAMES
     ]
-    sections = split_option_ingredient_sections(
-        MASTER_CUSHION_RAW_TEXT, options
-    )
+    canonical = canonicalize_product_options(options)
+    sections = split_option_ingredient_sections(MASTER_CUSHION_RAW_TEXT, options)
 
     assert all(
         section.mapping_status == "matched" for section in sections
     )
 
-    ingredients_by_name = {
-        name: section.ingredients
-        for name, section in zip(MASTER_CUSHION_OPTION_NAMES, sections)
-    }
-    # 같은 색상코드를 공유하는 패키지 구성 옵션은 동일한 성분을 받는다.
-    assert (
-        ingredients_by_name["[본품+리필+파우치] 17N"]
-        == ingredients_by_name["[본품+리필] 17N"]
-    )
-    assert (
-        ingredients_by_name["[본품+리필+파우치] 21N"]
-        == ingredients_by_name["[본품+리필] 21N"]
-    )
-    assert (
-        ingredients_by_name["[본품+리필+파우치] 21P"]
-        == ingredients_by_name["[본품+리필] 21P"]
-    )
-    # 서로 다른 색상코드는 서로 다른 성분을 받는다.
-    assert (
-        ingredients_by_name["[본품+리필] 17N"]
-        != ingredients_by_name["NEW / [본품+리필] 22N"]
-    )
+    assert [option.option_name for option in canonical] == [
+        "17N", "21N", "21P", "22N", "23N"
+    ]
+    assert canonical[0].source_option_names == [
+        "[본품+리필+파우치] 17N",
+        "[본품+리필] 17N",
+    ]
+    assert len({tuple(section.ingredients) for section in sections}) == 5
 
 
 def test_layered_fit_cushion_all_options_connect_to_five_shade_sections() -> None:
@@ -66,34 +52,33 @@ def test_layered_fit_cushion_all_options_connect_to_five_shade_sections() -> Non
         make_product_option(name)
         for name in LAYERED_FIT_CUSHION_OPTION_NAMES
     ]
-    sections = split_option_ingredient_sections(
-        LAYERED_FIT_CUSHION_RAW_TEXT, options
-    )
+    canonical = canonicalize_product_options(options)
+    sections = split_option_ingredient_sections(LAYERED_FIT_CUSHION_RAW_TEXT, options)
 
     assert all(
         section.mapping_status == "matched" for section in sections
     )
 
-    ingredients_by_name = {
-        name: section.ingredients
-        for name, section in zip(
-            LAYERED_FIT_CUSHION_OPTION_NAMES, sections
-        )
-    }
     distinct_ingredient_sets = {
         tuple(ingredients)
-        for ingredients in ingredients_by_name.values()
+        for ingredients in (section.ingredients for section in sections)
     }
     # 27개 옵션이 5개 색상코드로만 묶여야 한다.
     assert len(distinct_ingredient_sets) == 5
 
-    assert (
-        ingredients_by_name["[본품]17Y"]
-        == ingredients_by_name["[본품+리필] 17Y"]
-        == ingredients_by_name["[블러셔 증정] 17Y (본품+리필)"]
-    )
-    assert (
-        ingredients_by_name["[본품]19N"]
-        == ingredients_by_name["[본품+리필+미니 하이라이터] 19N"]
-        == ingredients_by_name["[프라이머 증정기획] 19N"]
-    )
+    assert {option.option_name for option in canonical} == {
+        "17Y", "19N", "21Y", "21P", "23Y"
+    }
+    sources_by_name = {
+        option.option_name: option.source_option_names for option in canonical
+    }
+    assert {
+        "[본품]17Y",
+        "[본품+리필] 17Y",
+        "[블러셔 증정] 17Y (본품+리필)",
+    } <= set(sources_by_name["17Y"])
+    assert {
+        "[본품]19N",
+        "[본품+리필+미니 하이라이터] 19N",
+        "[프라이머 증정기획] 19N",
+    } <= set(sources_by_name["19N"])

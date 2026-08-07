@@ -35,7 +35,7 @@ def build_service(*, create_tables: bool = True) -> ProductPrefetchService:
         create_database_tables()
     repository = SQLiteProductIngredientRepository(SessionLocal)
     ingredient_extractor = OliveYoungIngredientExtractor(
-        headless=settings.product_playwright_headless,
+        headless=settings.playwright_headless,
         timeout_ms=settings.product_playwright_timeout_ms,
         deadline_ms=settings.product_playwright_deadline_ms,
         max_attempts=settings.product_playwright_max_attempts,
@@ -49,7 +49,7 @@ def build_service(*, create_tables: bool = True) -> ProductPrefetchService:
     )
     option_extractor = OliveYoungProductOptionExtractor(
         ingredient_extractor,
-        headless=settings.product_playwright_headless,
+        headless=settings.playwright_headless,
         timeout_ms=settings.product_playwright_timeout_ms,
         deadline_ms=settings.product_playwright_deadline_ms,
         max_attempts=settings.product_playwright_max_attempts,

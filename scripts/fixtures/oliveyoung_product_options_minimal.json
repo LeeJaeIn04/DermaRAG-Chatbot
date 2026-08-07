@@ -1,0 +1,41 @@
+{
+  "product": {
+    "goodsNumber": "A000000175954",
+    "combinationOptionFlag": false,
+    "optionList": [
+      {
+        "optionNumber": "001",
+        "standardCode": "880000000001",
+        "optionName": "[본품+리필] 17Y",
+        "soldOutFlag": false,
+        "imageUrl": "https://example.test/17y.jpg",
+        "sortSeq": 1,
+        "representFlag": true,
+        "combinationOptionName": []
+      },
+      {
+        "optionNumber": "002",
+        "standardCode": "880000000002",
+        "optionName": "[본품+리필] 21Y",
+        "soldOutFlag": false,
+        "sortSeq": 2,
+        "representFlag": false,
+        "combinationOptionName": []
+      },
+      {
+        "optionNumber": "020",
+        "standardCode": "880000000020",
+        "optionName": "[본품+리필+쿠션케이스+퍼프] 21Y",
+        "soldOutFlag": true,
+        "sortSeq": 3,
+        "representFlag": false,
+        "combinationOptionName": []
+      }
+    ]
+  },
+  "diagnosticReviewOnlyOptions": [
+    "[본품] 17Y",
+    "[블러셔 증정] 21Y",
+    "[본품+케이스+키링] 21Y"
+  ]
+}

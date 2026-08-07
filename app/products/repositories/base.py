@@ -6,6 +6,7 @@ from app.products.models import (
     ProductCandidate,
     ProductIngredientResult,
 )
+from app.products.parser_state import ParserResult
 from app.products.related_models import RelatedProductMatch
 
 
@@ -19,12 +20,28 @@ class CachedProductOption:
     image_url: str | None = None
     source_option_names: tuple[str, ...] = ()
     source_option_ids: tuple[str, ...] = ()
+    product_id: str | None = None
+    option_number: str | None = None
+    standard_code: str | None = None
+    normalized_option_name: str = ""
+    availability: str = "unknown"
+    sold_out_flag: bool | None = None
+    dom_disabled: bool | None = None
+    sort_order: int | None = None
+    representative: bool | None = None
+    group_path: tuple[str, ...] = ()
+    combination_option_flag: bool | None = None
+    # Step 4: option-level cache의 Step 1 OptionParseStatus. legacy
+    # 전용 레코드(option_cache_status가 없는 경우)는 항상 ready였던
+    # 것과 동일하므로 기본값을 "ready"로 둔다.
+    status: str = "ready"
 
 
 @dataclass(frozen=True)
 class CachedProductPreparation:
     status: str
     options: tuple[CachedProductOption, ...] = ()
+    parser_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -149,8 +166,15 @@ class ProductIngredientRepository(Protocol):
         source: str,
         external_product_id: str,
         now: datetime,
+        *,
+        prefer_option_cache: bool = False,
     ) -> CachedProductPreparation | None:
-        """완전하고 유효한 상품 선택 캐시를 반환한다."""
+        """완전하고 유효한 상품 선택 캐시를 반환한다.
+
+        prefer_option_cache=True면 Step 3 option-level cache가
+        완전할 때 그 값을 우선 쓰고, 불완전하면 기존 legacy 판정으로
+        fallback한다.
+        """
         ...
 
     def mark_collection_complete(
@@ -175,8 +199,29 @@ class ProductIngredientRepository(Protocol):
         options: list[dict[str, object]],
         expires_at: datetime,
         parser_version: str,
+        production_parser_result: ParserResult | None = None,
     ) -> None:
-        """상품의 전체 옵션과 완료 상태를 한 transaction으로 저장한다."""
+        """상품의 전체 옵션과 완료 상태를 한 transaction으로 저장한다.
+
+        production_parser_result가 주어지면 Step 3 option-level
+        cache 컬럼도 같은 transaction에서 함께 쓴다. 이 값은 항상
+        production ParserResult여야 한다(shadow 저장 금지).
+        """
+        ...
+
+    def save_option_cache_snapshot(
+        self,
+        product: ProductCandidate,
+        *,
+        parser_result: ParserResult,
+        parser_version: str,
+        expires_at: datetime,
+    ) -> None:
+        """Step 3 option-level cache 전용 write. ready/partial/failed
+        어떤 collection_status든 그대로 저장할 수 있다(option-level
+        partial success 지원) - legacy save_collection()과 달리
+        100% matched를 요구하지 않는다. parser_result.source는
+        항상 "production"이어야 한다(shadow 저장 금지)."""
         ...
 
     def find_products_by_ingredient(

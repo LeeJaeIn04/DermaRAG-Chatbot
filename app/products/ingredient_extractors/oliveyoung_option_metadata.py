@@ -10,8 +10,20 @@ from app.products.option_parser import normalize_option_label
 FlightParseStatus = Literal["parsed", "failed"]
 MetadataMatchStatus = Literal[
     "complete_match",
+    "complete_match_reordered",
     "partial_metadata_enrichment",
     "mismatch",
+]
+MismatchCategory = Literal[
+    "order_only_mismatch",
+    "count_mismatch",
+    "normalized_name_mismatch",
+    "duplicate_name_collision",
+    "dom_only_option",
+    "flight_only_option",
+    "sold_out_state_mismatch",
+    "option_number_collision",
+    "unknown",
 ]
 
 
@@ -60,6 +72,9 @@ class ReconciledOption:
 class OptionReconciliationResult:
     status: MetadataMatchStatus
     options: tuple[ReconciledOption, ...]
+    mismatch_category: MismatchCategory | None = None
+    safe_reorder_possible: bool = False
+    reason: str | None = None
 
 
 def _optional_text(value: object) -> str | None:
@@ -324,7 +339,12 @@ def reconcile_dom_and_flight_options(
 
     flight_options = list(flight_result.options)
     if len(dom_options) != len(flight_options):
-        return OptionReconciliationResult(status="mismatch", options=())
+        return OptionReconciliationResult(
+            status="mismatch",
+            options=(),
+            mismatch_category="count_mismatch",
+            reason="DOM과 Flight 옵션 개수가 다릅니다.",
+        )
 
     dom_names = [
         normalize_option_label(option.raw_option_name)
@@ -337,19 +357,76 @@ def reconcile_dom_and_flight_options(
     if (
         len(set(dom_names)) != len(dom_names)
         or len(set(flight_names)) != len(flight_names)
-        or dom_names != flight_names
     ):
-        return OptionReconciliationResult(status="mismatch", options=())
+        return OptionReconciliationResult(
+            status="mismatch",
+            options=(),
+            mismatch_category="duplicate_name_collision",
+            reason="보수적 판매 옵션 identity가 중복됩니다.",
+        )
+
+    dom_name_set = set(dom_names)
+    flight_name_set = set(flight_names)
+    if dom_name_set != flight_name_set:
+        dom_only = dom_name_set - flight_name_set
+        flight_only = flight_name_set - dom_name_set
+        if dom_only and not flight_only:
+            category: MismatchCategory = "dom_only_option"
+        elif flight_only and not dom_only:
+            category = "flight_only_option"
+        else:
+            category = "normalized_name_mismatch"
+        return OptionReconciliationResult(
+            status="mismatch",
+            options=(),
+            mismatch_category=category,
+            reason="DOM과 Flight의 정규화 옵션 이름 집합이 다릅니다.",
+        )
+
+    official_ids = [
+        option.option_number
+        for option in flight_options
+        if option.option_number is not None
+    ]
+    if len(set(official_ids)) != len(official_ids):
+        return OptionReconciliationResult(
+            status="mismatch",
+            options=(),
+            mismatch_category="option_number_collision",
+            reason="Flight optionNumber가 중복됩니다.",
+        )
+
+    flight_by_name = dict(zip(flight_names, flight_options, strict=True))
+    ordered_flight = [flight_by_name[name] for name in dom_names]
 
     reconciled: list[ReconciledOption] = []
-    for dom, flight in zip(dom_options, flight_options, strict=True):
+    for dom, flight in zip(dom_options, ordered_flight, strict=True):
         if (
             flight.sold_out_flag is not None
             and dom.sold_out != flight.sold_out_flag
         ):
-            return OptionReconciliationResult(status="mismatch", options=())
+            return OptionReconciliationResult(
+                status="mismatch",
+                options=(),
+                mismatch_category="sold_out_state_mismatch",
+                reason=(
+                    "같은 옵션 이름의 DOM과 Flight 품절 상태가 다릅니다."
+                ),
+            )
         reconciled.append(ReconciledOption(dom=dom, flight=flight))
+    reordered = dom_names != flight_names
     return OptionReconciliationResult(
-        status="complete_match",
+        status=(
+            "complete_match_reordered"
+            if reordered
+            else "complete_match"
+        ),
         options=tuple(reconciled),
+        mismatch_category=("order_only_mismatch" if reordered else None),
+        safe_reorder_possible=reordered,
+        reason=(
+            "고유한 보수적 정규화 이름으로 완전 1:1 재정렬했습니다."
+            if reordered
+            else None
+        ),
     )
