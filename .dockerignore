@@ -1,0 +1,54 @@
+# Python virtual environment / cache
+.venv
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# macOS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Frontend local dependencies / build artifacts
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/build/
+
+# Test / Playwright artifacts
+test-results/
+playwright-report/
+screenshots/
+*.log
+
+# Local SQLite cache
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/*.sqlite
+data/*.sqlite3
+*.db-wal
+*.db-shm
+docs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

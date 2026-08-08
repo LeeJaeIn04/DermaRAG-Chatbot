@@ -54,7 +54,6 @@ def managed_chromium_page(
         page = None
         try:
             browser = playwright.chromium.launch(
-                channel="chrome",
                 headless=headless,
             )
             context_kwargs: dict[str, object] = {"locale": "ko-KR"}
