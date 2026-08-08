@@ -48,8 +48,15 @@ const initialAssistantMessage: ChatMessage = {
   createdAt: new Date(),
 };
 
+let idCounter = 0;
+
 function createId(prefix: string) {
-  return `${prefix}-${crypto.randomUUID()}`;
+  if (typeof crypto.randomUUID === "function") {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+
+  idCounter += 1;
+  return `${prefix}-${Date.now().toString(36)}-${idCounter.toString(36)}`;
 }
 
 export function buildProductAnalysisRequest(
